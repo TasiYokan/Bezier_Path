@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-
+    
 public class BezierCurve : MonoBehaviour
 {
     private List<BezierPoint> m_points;
@@ -12,6 +12,8 @@ public class BezierCurve : MonoBehaviour
     private LineRenderer m_lineRenderer;
 
     public int totalSampleCount = 10;
+
+    public bool drawDebugPath;
 
     public List<BezierFragment> Fragments
     {
@@ -47,7 +49,8 @@ public class BezierCurve : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        DrawDebugCurve();
+        if (drawDebugPath)
+            DrawDebugCurve();
     }
 
     private void DrawDebugCurve()
