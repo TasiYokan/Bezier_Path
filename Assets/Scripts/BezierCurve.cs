@@ -154,4 +154,28 @@ public class BezierCurve : MonoBehaviour
 
         return m_fragments[fragId].GetSampleVector(sampleId, _step);
     }
+
+    public Vector3 GetNextSamplePosAmongAllFrags(int _fragId, int _sampleId, int _step)
+    {
+        int fragId = _fragId;
+        int sampleId = _sampleId;
+
+        if (m_fragments[fragId].WithinFragment(sampleId + _step) == false)
+        {
+            if (isAutoConnect)
+            {
+                // Find connected frag
+                fragId = (fragId + _step + m_fragments.Count) % m_fragments.Count;
+                // Sample point can only be the head or rear of the new fragment
+                sampleId = _step > 0 ? 0 : m_fragments[fragId].SampleCount - 1;
+            }
+            else
+            {
+                // Fallback: return the nearest vector
+                return m_fragments[fragId].GetNextSamplePos(sampleId - _step, _step);
+            }
+        }
+
+        return m_fragments[fragId].GetNextSamplePos(sampleId, _step);
+    }
 }

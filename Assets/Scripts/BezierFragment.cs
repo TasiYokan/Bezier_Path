@@ -121,6 +121,13 @@ public class BezierFragment
         return m_samplePos[_id + _step] - m_samplePos[_id];
     }
 
+    public Vector3 GetNextSamplePos(int _id, int _step)
+    {
+        Assert.IsTrue(WithinFragment(_id + _step));
+
+        return m_samplePos[_id + _step];
+    }
+
     public bool WithinFragment(int _id)
     {
         return _id >= 0 && _id < m_samplePos.Count;
