@@ -22,6 +22,8 @@ public class BezierCurve : MonoBehaviour
     public int totalSampleCount = 10;
 
     public bool drawDebugPath;
+    public bool drawPathInEditor;
+    public bool hideNodesInGame;
 
     public List<BezierFragment> Fragments
     {
@@ -37,8 +39,24 @@ public class BezierCurve : MonoBehaviour
         m_lineRenderer = GetComponent<LineRenderer>();
 
         InitAllPoints();
+        HideNodes();
 
         InitFragmentsFromPoints();
+    }
+
+    private void HideNodes()
+    {
+        if(hideNodesInGame)
+        {
+            foreach (BezierPoint point in m_points)
+            {
+                MeshRenderer[] meshes = point.GetComponentsInChildren<MeshRenderer>();
+                for(int i = 0; i< meshes.Length; ++i)
+                {
+                    meshes[i].enabled = false;
+                }
+            }
+        }
     }
 
     private void InitAllPoints()
@@ -211,7 +229,7 @@ public class BezierCurve : MonoBehaviour
     {
         InitAllPoints();
 
-        if (Selection.activeGameObject == gameObject || drawDebugPath)
+        if (Selection.activeGameObject == gameObject || drawPathInEditor)
         {
             if (m_points.Count >= 2)
             {
