@@ -7,6 +7,7 @@ public class BezierPoint : MonoBehaviour
     public BaseBezierControlPoint primaryHandle;
     public BaseBezierControlPoint secondaryHandle;
     private BaseBezierControlPoint m_activeHandle;
+    private Vector3 m_position;
 
     [SerializeField]
     private bool m_isAutoSmooth;
@@ -81,6 +82,21 @@ public class BezierPoint : MonoBehaviour
         set
         {
             m_activeHandle = value;
+        }
+    }
+
+    public Vector3 Position
+    {
+        get
+        {
+            m_position = transform.position;
+            return m_position;
+        }
+
+        set
+        {
+            m_position = value;
+            transform.position = m_position;
         }
     }
 

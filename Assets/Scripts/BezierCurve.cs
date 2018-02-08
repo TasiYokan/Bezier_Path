@@ -2,7 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-    
+using UnityEditor;
+
+public class ColorSetting
+{
+    public static Color pathColor = Color.green;
+    public static Color inactivePathColor = Color.gray;
+    public static Color handleColor = Color.white;
+}
+
 public class BezierCurve : MonoBehaviour
 {
     private List<BezierPoint> m_points;
@@ -28,12 +36,23 @@ public class BezierCurve : MonoBehaviour
     {
         m_lineRenderer = GetComponent<LineRenderer>();
 
+        InitAllPoints();
+
+        InitFragmentsFromPoints();
+    }
+
+    private void InitAllPoints()
+    {
+
         m_points = GetComponentsInChildren<BezierPoint>().ToList();
         m_points.Sort((lhs, rhs) =>
         {
             return lhs.gameObject.name.CompareTo(rhs.gameObject.name);
         });
+    }
 
+    private void InitFragmentsFromPoints()
+    {
         m_fragments = new List<BezierFragment>();
         for (int i = 0; i < m_points.Count - 1; i++)
         {
@@ -51,33 +70,6 @@ public class BezierCurve : MonoBehaviour
     {
         if (drawDebugPath)
             DrawDebugCurve();
-    }
-
-    private void DrawDebugCurve()
-    {
-        int totalPos = 0;
-        foreach (var frag in m_fragments)
-        {
-            frag.UpdateSamplePos();
-            totalPos += frag.InitSampleCount - 1;
-        }
-
-        totalPos++;
-        m_lineRenderer.positionCount = totalPos;
-
-        int curPos = 0;
-        for (int i = 0; i < m_fragments.Count; ++i)
-        {
-            for (int j = 0; j < m_fragments[i].SamplePos.Count - 1; ++j)
-            {
-                m_lineRenderer.SetPosition(curPos + j, m_fragments[i].SamplePos[j]);
-            }
-
-            curPos += m_fragments[i].SamplePos.Count - 1;
-        }
-
-        List<Vector3> lastFragPoses = m_fragments[m_fragments.Count - 1].SamplePos;
-        m_lineRenderer.SetPosition(totalPos - 1, lastFragPoses[lastFragPoses.Count - 1]);
     }
 
     public void GetCurvePos(ref int _fragId, ref int _sampleId, float _speed, ref Vector3 _offset)
@@ -178,4 +170,68 @@ public class BezierCurve : MonoBehaviour
 
         return m_fragments[fragId].GetNextSamplePos(sampleId, _step);
     }
+
+    private void DrawDebugCurve()
+    {
+        int totalPos = 0;
+        foreach (var frag in m_fragments)
+        {
+            frag.UpdateSamplePos();
+            totalPos += frag.InitSampleCount - 1;
+        }
+
+        totalPos++;
+        m_lineRenderer.positionCount = totalPos;
+
+        int curPos = 0;
+        for (int i = 0; i < m_fragments.Count; ++i)
+        {
+            for (int j = 0; j < m_fragments[i].SamplePos.Count - 1; ++j)
+            {
+                m_lineRenderer.SetPosition(curPos + j, m_fragments[i].SamplePos[j]);
+            }
+
+            curPos += m_fragments[i].SamplePos.Count - 1;
+        }
+
+        List<Vector3> lastFragPoses = m_fragments[m_fragments.Count - 1].SamplePos;
+        m_lineRenderer.SetPosition(totalPos - 1, lastFragPoses[lastFragPoses.Count - 1]);
+    }
+
+#if UNITY_EDITOR
+    public void OnDrawGizmos()
+    {
+        InitAllPoints();
+
+        if (Selection.activeGameObject == gameObject || drawDebugPath)
+        {
+            if (m_points.Count >= 2)
+            {
+                for (int i = 0; i < m_points.Count; i++)
+                {
+                    if (i < m_points.Count - 1)
+                    {
+                        var index = m_points[i];
+                        var indexNext = m_points[i + 1];
+                        Handles.DrawBezier(index.Position, indexNext.Position, index.PrimaryHandle.Position,
+                            indexNext.SecondaryHandle.Position, ((Selection.activeGameObject == gameObject) ? ColorSetting.pathColor : ColorSetting.inactivePathColor), null, 5);
+
+                        Handles.DrawLine(index.Position, index.PrimaryHandle.Position);
+                        Handles.DrawLine(indexNext.Position, indexNext.SecondaryHandle.Position);
+                    }
+                    else
+                    {
+                        if (isAutoConnect)
+                        {
+                            var index = m_points[i];
+                            var indexNext = m_points[0];
+                            UnityEditor.Handles.DrawBezier(index.Position, indexNext.Position, index.PrimaryHandle.Position,
+                                indexNext.SecondaryHandle.Position, ((UnityEditor.Selection.activeGameObject == gameObject) ? ColorSetting.pathColor : ColorSetting.inactivePathColor), null, 5);
+                        }
+                    }
+                }
+            }
+        }
+    }
+#endif
 }
