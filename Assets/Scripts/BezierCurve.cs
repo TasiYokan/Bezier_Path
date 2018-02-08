@@ -198,6 +198,14 @@ public class BezierCurve : MonoBehaviour
         m_lineRenderer.SetPosition(totalPos - 1, lastFragPoses[lastFragPoses.Count - 1]);
     }
 
+    public void UpdateAllPointPoses()
+    {
+        foreach (BezierPoint point in m_points)
+        {
+            point.UpdatePosition();
+        }
+    }
+
 #if UNITY_EDITOR
     public void OnDrawGizmos()
     {

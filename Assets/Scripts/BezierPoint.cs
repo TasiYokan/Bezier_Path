@@ -127,7 +127,7 @@ public class BezierPoint : MonoBehaviour
         }
     }
 
-    private void UpdatePosition()
+    public void UpdatePosition()
     {
         if (IsAutoSmooth)
         {
