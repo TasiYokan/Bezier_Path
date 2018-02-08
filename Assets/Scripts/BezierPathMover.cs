@@ -10,6 +10,8 @@ public class BezierPathMover : MonoBehaviour
     // Offset from corresponding curve point 
     private Vector3 m_offset;
 
+    public Vector3 rotationConstrain = new Vector3(180, 180, 180);
+
     // Use this for initialization
     void Start()
     {
@@ -55,6 +57,19 @@ public class BezierPathMover : MonoBehaviour
             //transform.forward = bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn());
             //transform.LookAt(bezierPath.GetNextSamplePosAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn()));
             transform.forward = Vector3.Lerp(transform.forward, bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn()), Time.deltaTime);
+            
+            Vector3 rotInEuler = transform.rotation.eulerAngles;
+            rotInEuler = new Vector3(
+                rotInEuler.x > 180 ? rotInEuler.x - 360 : rotInEuler.x,
+                rotInEuler.y > 180 ? rotInEuler.y - 360 : rotInEuler.y,
+                rotInEuler.z > 180 ? rotInEuler.z - 360 : rotInEuler.z);
+
+            rotInEuler = new Vector3(
+                Mathf.Clamp(rotInEuler.x, -rotationConstrain.x, rotationConstrain.x),
+                Mathf.Clamp(rotInEuler.y, -rotationConstrain.y, rotationConstrain.y),
+                Mathf.Clamp(rotInEuler.z, -rotationConstrain.z, rotationConstrain.z));
+
+            transform.rotation = Quaternion.Euler(rotInEuler);
 
             yield return null;
         }
