@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.Events;
 
 public class BezierPathMover : MonoBehaviour
 {
@@ -11,6 +12,8 @@ public class BezierPathMover : MonoBehaviour
     private Vector3 m_offset;
 
     public Vector3 rotationConstrain = new Vector3(180, 180, 180);
+
+    public UnityEvent onEndCallback;
 
     // Use this for initialization
     void Start()
@@ -48,6 +51,8 @@ public class BezierPathMover : MonoBehaviour
                 || bezierPath.Fragments[m_curFragId].WithinFragment(m_curSampleId) == false)
             {
                 print("Has reached end");
+                if (onEndCallback != null)
+                    onEndCallback.Invoke();
                 yield break;
             }
 
