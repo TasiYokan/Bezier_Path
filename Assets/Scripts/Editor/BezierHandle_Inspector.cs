@@ -6,14 +6,14 @@ using UnityEngine;
 [CustomEditor(typeof(BezierHandle))]
 public class BezierHandle_Inspector : Editor
 {
-    private BezierHandle m_this;
+    private BezierHandle m_target;
 
     void OnEnable()
     {
         EditorApplication.update += Update;
 
-        m_this = (BezierHandle)target;
-        if (m_this == null) return;
+        m_target = (BezierHandle)target;
+        if (m_target == null) return;
     }
 
     void OnDisable()
@@ -29,11 +29,11 @@ public class BezierHandle_Inspector : Editor
 
     void OnSceneGUI()
     {
-        m_this.transform.parent.GetComponent<BezierPoint>().UpdatePosition();
+        m_target.transform.parent.GetComponent<BezierPoint>().UpdatePosition();
 
         if (Event.current.type == EventType.MouseDown)
         {
-            m_this.transform.parent.GetComponent<BezierPoint>().ActiveHandle = m_this;
+            m_target.transform.parent.GetComponent<BezierPoint>().ActiveHandle = m_target;
         }
     }
 }

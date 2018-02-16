@@ -8,6 +8,7 @@ public class BezierPoint : MonoBehaviour
     public BaseBezierControlPoint secondaryHandle;
     private BaseBezierControlPoint m_activeHandle;
     private Vector3 m_position;
+    private Quaternion m_rotation;
 
     [SerializeField]
     private bool m_isAutoSmooth;
@@ -97,6 +98,21 @@ public class BezierPoint : MonoBehaviour
         {
             m_position = value;
             transform.position = m_position;
+        }
+    }
+
+    public Quaternion Rotation
+    {
+        get
+        {
+            m_rotation = transform.rotation;
+            return m_rotation;
+        }
+
+        set
+        {
+            m_rotation = value;
+            transform.rotation = m_rotation;
         }
     }
 

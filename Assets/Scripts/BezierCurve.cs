@@ -36,6 +36,14 @@ public class BezierCurve : MonoBehaviour
         }
     }
 
+    public List<BezierPoint> Points
+    {
+        get
+        {
+            return m_points;
+        }
+    }
+
     // Use this for initialization
     void Start()
     {
