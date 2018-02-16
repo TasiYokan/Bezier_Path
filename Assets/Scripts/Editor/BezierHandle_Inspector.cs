@@ -30,5 +30,10 @@ public class BezierHandle_Inspector : Editor
     void OnSceneGUI()
     {
         m_this.transform.parent.GetComponent<BezierPoint>().UpdatePosition();
+
+        if (Event.current.type == EventType.MouseDown)
+        {
+            m_this.transform.parent.GetComponent<BezierPoint>().ActiveHandle = m_this;
+        }
     }
 }
