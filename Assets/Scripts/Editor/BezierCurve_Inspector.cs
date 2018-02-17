@@ -8,12 +8,21 @@ public class BezierCurve_Inspector : Editor
 {
     private BezierCurve m_target;
 
+    public BezierCurve Target
+    {
+        get
+        {
+            if(m_target == null)
+                m_target = (BezierCurve)target;
+            return m_target;
+        }
+    }
+
     void OnEnable()
     {
         EditorApplication.update += Update;
 
-        m_target = (BezierCurve)target;
-        if (m_target == null) return;
+        if (Target == null) return;
     }
 
     void OnDisable()
@@ -30,11 +39,12 @@ public class BezierCurve_Inspector : Editor
     void OnSceneGUI()
     {
         //m_this.UpdateAllPointPoses();
-        if (m_target.Points.Count > 2)
+
+        Handles.color = Color.white;
+        if (Target.Points != null && Target.Points.Count > 2)
         {
-            for(int i = 0; i< m_target.Points.Count;++i)
+            for(int i = 0; i< Target.Points.Count;++i)
             {
-                Handles.color = Color.green;
                 DrawWaypointHandles(i);
             }
         }
@@ -46,7 +56,17 @@ public class BezierCurve_Inspector : Editor
         {
             EditorGUI.BeginChangeCheck();
             Vector3 pos = Vector3.zero;
-            pos = Handles.FreeMoveHandle(m_target.Points[i].Position, (Tools.pivotRotation == PivotRotation.Local) ? m_target.Points[i].Rotation : Quaternion.identity, HandleUtility.GetHandleSize(m_target.Points[i].Position) * 0.2f, Vector3.zero, Handles.RectangleHandleCap);
+            pos = Handles.FreeMoveHandle(
+                Target.Points[i].Position,
+                (Tools.pivotRotation == PivotRotation.Local) ? Target.Points[i].Rotation : Quaternion.identity,
+                HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.2f,
+                Vector3.zero,
+                Handles.CubeHandleCap);
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(Target.Points[i].transform, "Moved Anchor");
+                Target.Points[i].Position = pos;
+            }
         }
     }
 }
