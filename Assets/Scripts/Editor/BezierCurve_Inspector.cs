@@ -14,6 +14,7 @@ public class BezierCurve_Inspector : Editor
 
     private ManipulationMode m_manipulateMode;
     private BezierCurve m_target;
+    private int m_selectId = -1;
 
     public BezierCurve Target
     {
@@ -39,9 +40,15 @@ public class BezierCurve_Inspector : Editor
         EditorApplication.update -= Update;
     }
 
+    void SelectIndex(int _id)
+    {
+        m_selectId = _id;
+        Repaint();
+    }
+
     void SetupEditorVariables()
     {
-        m_manipulateMode = ManipulationMode.Free;
+        m_manipulateMode = ManipulationMode.SelectAndTransform;
     }
 
     // Update is called once per frame
@@ -66,6 +73,15 @@ public class BezierCurve_Inspector : Editor
 
     private void DrawWaypointHandles(int i)
     {
+        float size = HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.2f;
+        if (m_selectId != i && Event.current.button != 1)
+        {
+            if (Handles.Button(Target.Points[i].Position, Quaternion.identity, size, size, Handles.CubeHandleCap))
+            {
+                SelectIndex(i);
+            }
+        }
+
         if (Tools.current == Tool.Move)
         {
             EditorGUI.BeginChangeCheck();
@@ -76,13 +92,14 @@ public class BezierCurve_Inspector : Editor
                 pos = Handles.FreeMoveHandle(
                 Target.Points[i].Position,
                 (Tools.pivotRotation == PivotRotation.Local) ? Target.Points[i].Rotation : Quaternion.identity,
-                HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.2f,
+                size,
                 Vector3.zero,
                 Handles.CubeHandleCap);
             }
             else if (m_manipulateMode == ManipulationMode.SelectAndTransform)
             {
-                pos = Handles.PositionHandle(Target.Points[i].Position, (Tools.pivotRotation == PivotRotation.Local) ? Target.Points[i].Rotation : Quaternion.identity);
+                if (i == m_selectId)
+                    pos = Handles.PositionHandle(Target.Points[i].Position, (Tools.pivotRotation == PivotRotation.Local) ? Target.Points[i].Rotation : Quaternion.identity);
             }
 
             if (EditorGUI.EndChangeCheck())
@@ -105,7 +122,8 @@ public class BezierCurve_Inspector : Editor
             }
             else if (m_manipulateMode == ManipulationMode.SelectAndTransform)
             {
-                rot = Handles.RotationHandle(Target.Points[i].Rotation, Target.Points[i].Position);
+                if (i == m_selectId)
+                    rot = Handles.RotationHandle(Target.Points[i].Rotation, Target.Points[i].Position);
             }
 
             if (EditorGUI.EndChangeCheck())
