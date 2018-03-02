@@ -45,9 +45,8 @@ public class BezierCurve : MonoBehaviour
             return m_points;
         }
     }
-
-    // Use this for initialization
-    void Start()
+    
+    void Awake()
     {
         m_lineRenderer = GetComponent<LineRenderer>();
 
@@ -99,7 +98,7 @@ public class BezierCurve : MonoBehaviour
         {
             totalLength += frag.Length;
         }
-        print("Total length: " + totalLength);
+        //print("Total length: " + totalLength);
     }
 
     // Update is called once per frame
