@@ -5,7 +5,11 @@ using UnityEngine.Events;
 public class BezierPathMover : MonoBehaviour
 {
     public BezierCurve bezierPath;
-    public float speed;
+    public float speedInSecond;
+    /// <summary>
+    /// If greater than 0, will overwirte <see cref="speedInSecond"/>
+    /// </summary>
+    public float duration = -1;
     private int m_curFragId = 0;
     private int m_curSampleId = 0;
     // Offset from corresponding curve point 
@@ -18,7 +22,9 @@ public class BezierPathMover : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        StartCoroutine(MoveAlongPath());
+        // For test
+        //Invoke("StartMove", 0.01f);
+        StartMove();
     }
 
     // Update is called once per frame
@@ -30,27 +36,36 @@ public class BezierPathMover : MonoBehaviour
         // For debug
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            speed *= 1.01f;
+            speedInSecond *= 1.01f;
         }
         else if (Input.GetKey(KeyCode.DownArrow))
         {
-            speed *= 0.99f;
+            speedInSecond *= 0.99f;
         }
         //speed = Mathf.Max(0, speed);
     }
 
+    public void StartMove()
+    {
+        StartCoroutine(MoveAlongPath());
+    }
+
     private IEnumerator MoveAlongPath()
     {
-        yield return new WaitForSeconds(0.1f);
-
+        //print("Start time: " + Time.time);
+        if(duration > 0)
+        {
+            speedInSecond = bezierPath.totalLength / duration;
+        }
         while (true)
         {
-            bezierPath.GetCurvePos(ref m_curFragId, ref m_curSampleId, speed, ref m_offset);
+            bezierPath.GetCurvePos(ref m_curFragId, ref m_curSampleId, speedInSecond * Time.deltaTime, ref m_offset);
 
             if (m_curFragId < 0 || m_curFragId >= bezierPath.Fragments.Count
                 || bezierPath.Fragments[m_curFragId].WithinFragment(m_curSampleId) == false)
             {
                 print("Has reached end");
+                //print("Finish time: " + Time.time);
                 if (onEndCallback != null)
                     onEndCallback.Invoke();
                 yield break;
@@ -61,7 +76,7 @@ public class BezierPathMover : MonoBehaviour
 
             //transform.forward = bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn());
             //transform.LookAt(bezierPath.GetNextSamplePosAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn()));
-            transform.forward = Vector3.Lerp(transform.forward, bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn()), Time.deltaTime);
+            transform.forward = Vector3.Lerp(transform.forward, bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speedInSecond.Sgn()), Time.deltaTime);
             
             Vector3 rotInEuler = transform.rotation.eulerAngles;
             rotInEuler = new Vector3(

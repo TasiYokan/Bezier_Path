@@ -28,6 +28,8 @@ public class BezierCurve : MonoBehaviour
     public bool drawPathInEditor;
     public bool hideNodesInGame;
 
+    public float totalLength;
+
     public List<BezierFragment> Fragments
     {
         get
@@ -72,7 +74,6 @@ public class BezierCurve : MonoBehaviour
 
     private void InitAllPoints()
     {
-
         m_points = GetComponentsInChildren<BezierPoint>().ToList();
         m_points.Sort((lhs, rhs) =>
         {
@@ -92,6 +93,13 @@ public class BezierCurve : MonoBehaviour
         {
             m_fragments.Add(new BezierFragment(m_points[m_points.Count - 1], m_points[0], totalSampleCount / m_points.Count));
         }
+
+        totalLength = 0;
+        foreach (BezierFragment frag in m_fragments)
+        {
+            totalLength += frag.Length;
+        }
+        print("Total length: " + totalLength);
     }
 
     // Update is called once per frame

@@ -13,6 +13,7 @@ public class BezierFragment
 
     private int m_initSampleCount;
     private List<Vector3> m_samplePos;
+    private float m_length;
 
     public List<Vector3> SamplePos
     {
@@ -43,6 +44,19 @@ public class BezierFragment
         }
     }
 
+    public float Length
+    {
+        get
+        {
+            return m_length;
+        }
+
+        private set
+        {
+            m_length = value;
+        }
+    }
+
     public BezierFragment(BezierPoint _start, BezierPoint _end, int _sampleCount = 10)
     {
         startPoint = _start;
@@ -55,10 +69,14 @@ public class BezierFragment
 
     public void UpdateSamplePos()
     {
+        Length = 0;
         SamplePos.Clear();
         for (int i = 0; i < m_initSampleCount; ++i)
         {
             Vector3 pos = CalculateCubicBezierPos(i / (float)(m_initSampleCount - 1));
+
+            if (i > 0)
+                Length += (pos - SamplePos[i - 1]).magnitude;
 
             SamplePos.Add(pos);
         }
