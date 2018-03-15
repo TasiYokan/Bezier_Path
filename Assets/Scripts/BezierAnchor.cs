@@ -23,4 +23,11 @@ public class BezierAnchor : BaseBezierControlPoint
             }
         }
     }
+
+    private void Update()
+    {
+        // Make it always at the center of BezierPoint
+        // To make Hanlde.Button to easier track BezierPoint
+        transform.parent.position = this.Position;
+    }
 }
