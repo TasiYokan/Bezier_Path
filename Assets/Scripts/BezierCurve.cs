@@ -45,7 +45,7 @@ public class BezierCurve : MonoBehaviour
             return m_points;
         }
     }
-    
+
     void Awake()
     {
         m_lineRenderer = GetComponent<LineRenderer>();
@@ -58,12 +58,12 @@ public class BezierCurve : MonoBehaviour
 
     private void HideNodes()
     {
-        if(hideNodesInGame)
+        if (hideNodesInGame)
         {
             foreach (BezierPoint point in m_points)
             {
                 MeshRenderer[] meshes = point.GetComponentsInChildren<MeshRenderer>();
-                for(int i = 0; i< meshes.Length; ++i)
+                for (int i = 0; i < meshes.Length; ++i)
                 {
                     meshes[i].enabled = false;
                 }
@@ -217,7 +217,7 @@ public class BezierCurve : MonoBehaviour
         int totalPos = 1;
         foreach (var frag in m_fragments)
         {
-            frag.UpdateSamplePos();
+            //frag.UpdateSamplePos();
             totalPos += frag.InitSampleCount - 1;
         }
         return totalPos;
@@ -226,6 +226,8 @@ public class BezierCurve : MonoBehaviour
     public void ForceUpdateOneFrag(int _fragId)
     {
         m_fragments[_fragId].UpdateSamplePos();
+        m_fragments[(_fragId + m_fragments.Count - 1) % m_fragments.Count].UpdateSamplePos();
+        m_fragments[(_fragId + m_fragments.Count + 1) % m_fragments.Count].UpdateSamplePos();
     }
 
     private void DrawDebugCurve()
