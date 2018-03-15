@@ -12,19 +12,19 @@ public class BezierFragment
     public BezierPoint endPoint;
 
     private int m_initSampleCount;
-    private List<Vector3> m_samplePos;
+    private List<Vector3> m_samplePoses;
     private float m_length;
 
     public List<Vector3> SamplePos
     {
         get
         {
-            return m_samplePos;
+            return m_samplePoses;
         }
 
         set
         {
-            m_samplePos = value;
+            m_samplePoses = value;
         }
     }
 
@@ -32,7 +32,7 @@ public class BezierFragment
     {
         get
         {
-            return m_samplePos.Count;
+            return m_samplePoses.Count;
         }
     }
 
@@ -115,7 +115,7 @@ public class BezierFragment
         {
             previousDistance = totalDistance;
 
-            if (WithinFragment(curId + step))
+            if (SampleIdWithinFragment(curId + step))
             {
                 totalDistance += GetSampleVector(curId, step).magnitude;
             }
@@ -134,20 +134,36 @@ public class BezierFragment
 
     public Vector3 GetSampleVector(int _id, int _step)
     {
-        Assert.IsTrue(WithinFragment(_id + _step));
+        Assert.IsTrue(SampleIdWithinFragment(_id + _step));
 
-        return m_samplePos[_id + _step] - m_samplePos[_id];
+        return m_samplePoses[_id + _step] - m_samplePoses[_id];
     }
 
     public Vector3 GetNextSamplePos(int _id, int _step)
     {
-        Assert.IsTrue(WithinFragment(_id + _step));
+        Assert.IsTrue(SampleIdWithinFragment(_id + _step));
 
-        return m_samplePos[_id + _step];
+        return m_samplePoses[_id + _step];
     }
 
-    public bool WithinFragment(int _id)
+    public bool SampleIdWithinFragment(int _id)
     {
-        return _id >= 0 && _id < m_samplePos.Count;
+        return _id >= 0 && _id < m_samplePoses.Count;
+    }
+
+    public int FindNearestSampleOnFrag(Vector3 _pos)
+    {
+        int nearestSampleId = 0;
+        float shortestDist = (_pos - m_samplePoses[nearestSampleId]).sqrMagnitude;
+        for (int i = 1; i < m_samplePoses.Count; ++i)
+        {
+            if ((_pos - m_samplePoses[i]).sqrMagnitude.FloatLess(shortestDist))
+            {
+                nearestSampleId = i;
+                shortestDist = (_pos - m_samplePoses[i]).sqrMagnitude;
+            }
+        }
+
+        return nearestSampleId;
     }
 }

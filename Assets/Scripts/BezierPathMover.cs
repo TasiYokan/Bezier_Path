@@ -69,7 +69,7 @@ public class BezierPathMover : MonoBehaviour
             bezierPath.GetCurvePos(ref m_curFragId, ref m_curSampleId, speedInSecond * Time.deltaTime, ref m_offset);
 
             if (m_curFragId < 0 || m_curFragId >= bezierPath.Fragments.Count
-                || bezierPath.Fragments[m_curFragId].WithinFragment(m_curSampleId) == false)
+                || bezierPath.Fragments[m_curFragId].SampleIdWithinFragment(m_curSampleId) == false)
             {
                 print("Has reached end");
                 //print("Finish time: " + Time.time);

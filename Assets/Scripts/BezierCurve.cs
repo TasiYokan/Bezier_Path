@@ -140,7 +140,7 @@ public class BezierCurve : MonoBehaviour
                 curSampleId, ref remainLength);
 
             // If remaining length has exceed the fragment
-            if (m_fragments[curFragId].WithinFragment(curSampleId + remainLength.Sgn()) == false)
+            if (m_fragments[curFragId].SampleIdWithinFragment(curSampleId + remainLength.Sgn()) == false)
             {
                 curFragId += remainLength.Sgn();
 
@@ -178,7 +178,7 @@ public class BezierCurve : MonoBehaviour
         int fragId = _fragId;
         int sampleId = _sampleId;
 
-        if (m_fragments[fragId].WithinFragment(sampleId + _step) == false)
+        if (m_fragments[fragId].SampleIdWithinFragment(sampleId + _step) == false)
         {
             if (isAutoConnect)
             {
@@ -202,7 +202,7 @@ public class BezierCurve : MonoBehaviour
         int fragId = _fragId;
         int sampleId = _sampleId;
 
-        if (m_fragments[fragId].WithinFragment(sampleId + _step) == false)
+        if (m_fragments[fragId].SampleIdWithinFragment(sampleId + _step) == false)
         {
             if (isAutoConnect)
             {
