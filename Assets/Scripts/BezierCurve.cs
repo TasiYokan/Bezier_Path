@@ -71,6 +71,12 @@ public class BezierCurve : MonoBehaviour
         }
     }
 
+    private bool CheckIfPointCountChange()
+    {
+        int prevCount = m_points.Count;
+        return (GetComponentsInChildren<BezierPoint>().Length != prevCount);
+    }
+
     private void InitAllPoints()
     {
         m_points = GetComponentsInChildren<BezierPoint>().ToList();
@@ -107,6 +113,13 @@ public class BezierCurve : MonoBehaviour
         if (drawDebugPath)
             DrawDebugCurve();
         //ForceUpdateFrags();
+
+        if(CheckIfPointCountChange())
+        {
+            InitAllPoints();
+            HideNodes();
+            InitFragmentsFromPoints();
+        }
     }
 
     public void GetCurvePos(ref int _fragId, ref int _sampleId, float _speed, ref Vector3 _offset)
