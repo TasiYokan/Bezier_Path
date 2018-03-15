@@ -106,6 +106,7 @@ public class BezierCurve : MonoBehaviour
     {
         if (drawDebugPath)
             DrawDebugCurve();
+        //ForceUpdateFrags();
     }
 
     public void GetCurvePos(ref int _fragId, ref int _sampleId, float _speed, ref Vector3 _offset)
@@ -207,16 +208,29 @@ public class BezierCurve : MonoBehaviour
         return m_fragments[fragId].GetNextSamplePos(sampleId, _step);
     }
 
-    private void DrawDebugCurve()
+    /// <summary>
+    /// Update all frags in list and return the total count of sample position
+    /// </summary>
+    /// <returns></returns>
+    public int ForceUpdateFrags()
     {
-        int totalPos = 0;
+        int totalPos = 1;
         foreach (var frag in m_fragments)
         {
             frag.UpdateSamplePos();
             totalPos += frag.InitSampleCount - 1;
         }
+        return totalPos;
+    }
 
-        totalPos++;
+    public void ForceUpdateOneFrag(int _fragId)
+    {
+        m_fragments[_fragId].UpdateSamplePos();
+    }
+
+    private void DrawDebugCurve()
+    {
+        int totalPos = ForceUpdateFrags();
         m_lineRenderer.positionCount = totalPos;
 
         int curPos = 0;

@@ -7,6 +7,10 @@ public class BezierPathMover : MonoBehaviour
     public BezierCurve bezierPath;
     public float speedInSecond;
     /// <summary>
+    /// Only update the frag it is on to save some computation
+    /// </summary>
+    public bool alwaysUpdateCurrentFrag;
+    /// <summary>
     /// If greater than 0, will overwirte <see cref="speedInSecond"/>
     /// </summary>
     public float duration = -1;
@@ -32,6 +36,9 @@ public class BezierPathMover : MonoBehaviour
     {
         // If the offset is too tiny, we could hardly notice it actually
         //Debug.DrawLine(path.CurvePoints[curId], transform.position, Color.green);
+
+        if (alwaysUpdateCurrentFrag)
+            bezierPath.ForceUpdateOneFrag(m_curFragId);
 
         // For debug
         if (Input.GetKey(KeyCode.UpArrow))
