@@ -151,7 +151,7 @@ public class BezierFragment
         return _id >= 0 && _id < m_samplePoses.Count;
     }
 
-    public int FindNearestSampleOnFrag(Vector3 _pos)
+    public int FindNearestSampleOnFrag(Vector3 _pos, ref Vector3 _offset)
     {
         int nearestSampleId = 0;
         float shortestDist = (_pos - m_samplePoses[nearestSampleId]).sqrMagnitude;
@@ -160,7 +160,8 @@ public class BezierFragment
             if ((_pos - m_samplePoses[i]).sqrMagnitude.FloatLess(shortestDist))
             {
                 nearestSampleId = i;
-                shortestDist = (_pos - m_samplePoses[i]).sqrMagnitude;
+                _offset = _pos - m_samplePoses[i];
+                shortestDist = _offset.sqrMagnitude;
             }
         }
 

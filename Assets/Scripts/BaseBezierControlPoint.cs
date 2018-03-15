@@ -5,6 +5,7 @@ public class BaseBezierControlPoint : MonoBehaviour
 {
     private Vector3 m_position;
     private Vector3 m_dragOffset;
+    protected bool m_isMouseDown;
 
     public Vector3 Position
     {
@@ -36,6 +37,7 @@ public class BaseBezierControlPoint : MonoBehaviour
 
     public virtual void OnMouseDown()
     {
+        m_isMouseDown = true;
         m_dragOffset = transform.position - GetMouseWorldPos();
     }
 
@@ -46,7 +48,7 @@ public class BaseBezierControlPoint : MonoBehaviour
 
     protected virtual void OnMouseUp()
     {
-
+        m_isMouseDown = false;
     }
 
     private Vector3 GetMouseWorldPos()

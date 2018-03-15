@@ -9,13 +9,13 @@ public class BezierAnchor : BaseBezierControlPoint
 
         if (Input.GetKey(KeyCode.Space))
         {
-            if(transform.parent.GetComponent<BezierPoint>().PrimaryHandle == this)
+            if (transform.parent.GetComponent<BezierPoint>().PrimaryHandle == this)
             {
                 transform.parent.GetComponent<BezierPoint>().primaryHandle.gameObject.SetActive(true);
                 //transform.parent.GetComponent<BezierPoint>().PrimaryHandle.OnMouseDown();
                 //this.OnMouseUp();
             }
-            else if(transform.parent.GetComponent<BezierPoint>().SecondaryHandle == this)
+            else if (transform.parent.GetComponent<BezierPoint>().SecondaryHandle == this)
             {
                 transform.parent.GetComponent<BezierPoint>().secondaryHandle.gameObject.SetActive(true);
                 //transform.parent.GetComponent<BezierPoint>().SecondaryHandle.OnMouseDown();
@@ -28,6 +28,7 @@ public class BezierAnchor : BaseBezierControlPoint
     {
         // Make it always at the center of BezierPoint
         // To make Hanlde.Button to easier track BezierPoint
-        transform.parent.position = this.Position;
+        if (m_isMouseDown)
+            transform.parent.position = this.Position;
     }
 }

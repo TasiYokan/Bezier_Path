@@ -59,13 +59,20 @@ public class BezierPathMover : MonoBehaviour
 
     private IEnumerator MoveAlongPath()
     {
+        m_curFragId = 0;
+        m_curSampleId = 0;
+        m_offset = Vector3.zero;
+
         //print("Start time: " + Time.time);
-        if(duration > 0)
+        if (duration > 0)
         {
             speedInSecond = bezierPath.totalLength / duration;
         }
         while (true)
         {
+            // To make mover Steadicam stable
+            m_curSampleId = bezierPath.Fragments[m_curFragId].FindNearestSampleOnFrag(transform.position, ref m_offset);
+
             bezierPath.GetCurvePos(ref m_curFragId, ref m_curSampleId, speedInSecond * Time.deltaTime, ref m_offset);
 
             if (m_curFragId < 0 || m_curFragId >= bezierPath.Fragments.Count
