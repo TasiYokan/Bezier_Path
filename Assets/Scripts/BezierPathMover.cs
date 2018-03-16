@@ -7,6 +7,10 @@ public class BezierPathMover : MonoBehaviour
     public BezierCurve bezierPath;
     public float speedInSecond;
     /// <summary>
+    /// Have bugs sometime, still in alpha phase
+    /// </summary>
+    public bool keepSteadicamStable = false;
+    /// <summary>
     /// Only update the frag it is on to save some computation
     /// </summary>
     public bool alwaysUpdateCurrentFrag;
@@ -71,7 +75,8 @@ public class BezierPathMover : MonoBehaviour
         while (true)
         {
             // To make mover Steadicam stable
-            m_curSampleId = bezierPath.Fragments[m_curFragId].FindNearestSampleOnFrag(transform.position, ref m_offset);
+            if (keepSteadicamStable)
+                m_curSampleId = bezierPath.Fragments[m_curFragId].FindNearestSampleOnFrag(transform.position, ref m_offset);
 
             bezierPath.GetCurvePos(ref m_curFragId, ref m_curSampleId, speedInSecond * Time.deltaTime, ref m_offset);
 
@@ -91,7 +96,7 @@ public class BezierPathMover : MonoBehaviour
             //transform.forward = bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn());
             //transform.LookAt(bezierPath.GetNextSamplePosAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn()));
             transform.forward = Vector3.Lerp(transform.forward, bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speedInSecond.Sgn()), Time.deltaTime);
-            
+
             Vector3 rotInEuler = transform.rotation.eulerAngles;
             rotInEuler = new Vector3(
                 rotInEuler.x > 180 ? rotInEuler.x - 360 : rotInEuler.x,
