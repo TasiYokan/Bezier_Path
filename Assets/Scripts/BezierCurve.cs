@@ -85,10 +85,11 @@ public class BezierCurve : MonoBehaviour
     /// Update anchors' position based on their localPosition
     /// Called every frame or everytime changed?
     /// </summary>
-    public void UpdateAnchorsPosition()
+    public void UpdateAnchorsTransform()
     {
         for (int i = 0; i < Points.Count; ++i)
         {
+            SetAnchorLocalRotation(i, Points[i].LocalRotation);
             SetAnchorLocalPosition(i, Points[i].LocalPosition);
         }
     }
@@ -103,6 +104,18 @@ public class BezierCurve : MonoBehaviour
     {
         Points[_id].LocalPosition = _localPosition;
         Points[_id].Position = transform.rotation * _localPosition + transform.position;
+    }
+
+    public void SetAnchorRotation(int _id, Quaternion _rotation)
+    {
+        Points[_id].Rotation = _rotation;
+        Points[_id].LocalRotation = Quaternion.Inverse(transform.rotation) * _rotation;
+    }
+
+    public void SetAnchorLocalRotation(int _id, Quaternion _localRotation)
+    {
+        Points[_id].LocalRotation = _localRotation;
+        Points[_id].Rotation = transform.rotation * _localRotation;
     }
 
     public void GetCurvePos(ref int _fragId, ref int _sampleId, float _speed, ref Vector3 _offset)

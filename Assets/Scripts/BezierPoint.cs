@@ -14,6 +14,8 @@ public class BezierPoint
     private Vector3 m_localPosition;
     [SerializeField]
     private Quaternion m_rotation;
+    [SerializeField]
+    private Quaternion m_localRotation;
 
     [SerializeField]
     private bool m_isAutoSmooth;
@@ -68,7 +70,19 @@ public class BezierPoint
         set
         {
             m_rotation = value;
-            UpdateHandlesPosition();
+        }
+    }
+
+    public Quaternion LocalRotation
+    {
+        get
+        {
+            return m_localRotation;
+        }
+
+        set
+        {
+            m_localRotation = value;
         }
     }
 
