@@ -81,6 +81,30 @@ public class BezierCurve : MonoBehaviour
         //ForceUpdateFrags();
     }
 
+    /// <summary>
+    /// Update anchors' position based on their localPosition
+    /// Called every frame or everytime changed?
+    /// </summary>
+    public void UpdateAnchorsPosition()
+    {
+        for (int i = 0; i < Points.Count; ++i)
+        {
+            SetAnchorLocalPosition(i, Points[i].LocalPosition);
+        }
+    }
+
+    public void SetAnchorPosition(int _id, Vector3 _position)
+    {
+        Points[_id].Position = _position;
+        Points[_id].LocalPosition = Quaternion.Inverse(transform.rotation) * (_position - transform.position);
+    }
+
+    public void SetAnchorLocalPosition(int _id, Vector3 _localPosition)
+    {
+        Points[_id].LocalPosition = _localPosition;
+        Points[_id].Position = transform.rotation * _localPosition + transform.position;
+    }
+
     public void GetCurvePos(ref int _fragId, ref int _sampleId, float _speed, ref Vector3 _offset)
     {
         // Get offset's projection on vector of heading. A positive value means it's on the way if you are moving with a positive speed

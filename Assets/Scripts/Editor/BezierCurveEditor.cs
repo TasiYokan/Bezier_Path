@@ -152,7 +152,7 @@ public class BezierCurveEditor : Editor
         EditorGUI.BeginChangeCheck();
         GUILayout.BeginVertical("Box");
         Vector3 pos = EditorGUILayout.Vector3Field("Anchor",
-            Target.Points[_pointId].Position);
+            Target.Points[_pointId].LocalPosition);
         Vector3 pos_0 = EditorGUILayout.Vector3Field("Handle 1th",
             Target.Points[_pointId].GetHandle(0).LocalPosition);
         Vector3 pos_1 = EditorGUILayout.Vector3Field("Handle 2rd",
@@ -161,7 +161,7 @@ public class BezierCurveEditor : Editor
         if (EditorGUI.EndChangeCheck())
         {
             Undo.RecordObject(Target, "Changed handle transform");
-            Target.Points[_pointId].Position = pos;
+            Target.Points[_pointId].LocalPosition = pos;
             Target.Points[_pointId].SetHandleLocalPosition(0, pos_0);
             Target.Points[_pointId].SetHandleLocalPosition(1, pos_1);
             SceneView.RepaintAll();
@@ -191,6 +191,8 @@ public class BezierCurveEditor : Editor
     {
         if (m_drawPathInEditor == false)
             return;
+
+        Target.UpdateAnchorsPosition();
 
         if (Target.Points.Count >= 2)
         {
@@ -260,7 +262,7 @@ public class BezierCurveEditor : Editor
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RegisterCompleteObjectUndo(Target, "Moved waypoint");
-                Target.Points[i].Position = pos;
+                Target.SetAnchorPosition(i, pos);
                 Repaint();
             }
         }
@@ -289,7 +291,7 @@ public class BezierCurveEditor : Editor
                 Repaint();
             }
         }
-        else if (Tools.current == Tool.Transform)
+        else if (Tools.current == Tool.Transform || Tools.current == Tool.Rect)
         {
             EditorGUI.BeginChangeCheck();
             Vector3 pos = Vector3.zero;
@@ -320,7 +322,7 @@ public class BezierCurveEditor : Editor
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RegisterCompleteObjectUndo(Target, "Transformed waypoint");
-                Target.Points[i].Position = pos;
+                Target.SetAnchorPosition(i, pos);
                 Target.Points[i].Rotation = rot;
                 Repaint();
             }

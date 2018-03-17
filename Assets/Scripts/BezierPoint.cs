@@ -11,6 +11,8 @@ public class BezierPoint
     [SerializeField]
     private Vector3 m_position;
     [SerializeField]
+    private Vector3 m_localPosition;
+    [SerializeField]
     private Quaternion m_rotation;
 
     [SerializeField]
@@ -40,6 +42,19 @@ public class BezierPoint
         {
             m_position = value;
             UpdateHandlesPosition();
+        }
+    }
+
+    public Vector3 LocalPosition
+    {
+        get
+        {
+            return m_localPosition;
+        }
+
+        set
+        {
+            m_localPosition = value;
         }
     }
 
@@ -74,10 +89,14 @@ public class BezierPoint
         m_handles[1] = new BezierHandle();
     }
 
+    /// <summary>
+    /// Update handles' position based on their localPosition
+    /// Called every frame or everytime changed?
+    /// </summary>
     public void UpdateHandlesPosition()
     {
-        SetHandleLocalPosition(0, GetHandle(0).LocalPosition);
-        SetHandleLocalPosition(1, GetHandle(1).LocalPosition);
+        SetHandleLocalPosition(0, m_handles[0].LocalPosition);
+        SetHandleLocalPosition(1, m_handles[1].LocalPosition);
     }
 
     public BezierHandle GetHandle(int _id)
@@ -87,14 +106,14 @@ public class BezierPoint
 
     public void SetHandlePosition(int _id, Vector3 _position)
     {
-        GetHandle(_id).Position = _position;
-        GetHandle(_id).LocalPosition = Quaternion.Inverse(this.Rotation) * (_position - this.Position);
+        m_handles[_id].Position = _position;
+        m_handles[_id].LocalPosition = Quaternion.Inverse(this.Rotation) * (_position - this.Position);
     }
 
     public void SetHandleLocalPosition(int _id, Vector3 _localPosition)
     {
-        GetHandle(_id).LocalPosition = _localPosition;
-        GetHandle(_id).Position = this.Rotation * _localPosition + this.Position;
+        m_handles[_id].LocalPosition = _localPosition;
+        m_handles[_id].Position = this.Rotation * _localPosition + this.Position;
     }
 
     /// <summary>
@@ -104,7 +123,7 @@ public class BezierPoint
     {
         int refId = _basedOnPrimary ? 0 : 1;
 
-        GetHandle(1 - refId).Position = 2 * Position - GetHandle(refId).Position;
+        m_handles[1 - refId].Position = 2 * Position - m_handles[refId].Position;
     }
 
     public void UpdatePosition()
