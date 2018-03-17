@@ -39,6 +39,7 @@ public class BezierPoint : MonoBehaviour, IBezierPos
         {
             m_position = value;
             transform.position = m_position;
+            UpdateHandlesPosition();
         }
     }
 
@@ -89,6 +90,12 @@ public class BezierPoint : MonoBehaviour, IBezierPos
             m_handles[0] = new BezierHandle(this);
         if (m_handles[1] == null)
             m_handles[1] = new BezierHandle(this);
+    }
+
+    private void UpdateHandlesPosition()
+    {
+        m_handles[0].UpdatePositionBasedOnParent();
+        m_handles[1].UpdatePositionBasedOnParent();
     }
 
     public BezierHandle GetHandle(int _id)

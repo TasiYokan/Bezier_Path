@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.Assertions;
 
 [System.Serializable]
 public class BezierHandle : IBezierPos
@@ -43,5 +44,12 @@ public class BezierHandle : IBezierPos
     {
         m_parent = _parent;
         LocalPosition = Vector3.zero;
+    }
+
+    public void UpdatePositionBasedOnParent()
+    {
+        Assert.IsNotNull(m_parent, "Parent should be set before applying local position.");
+
+        LocalPosition = m_localPosition;
     }
 }

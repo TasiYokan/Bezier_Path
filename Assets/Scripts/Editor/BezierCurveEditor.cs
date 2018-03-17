@@ -64,7 +64,7 @@ public class BezierCurveEditor : Editor
         //m_this.UpdateAllPointPoses();
 
         Handles.color = Color.white;
-        if (Target.Points != null && Target.Points.Count > 2)
+        if (Target.Points != null)
         {
             for (int i = 0; i < Target.Points.Count; ++i)
             {
@@ -76,6 +76,7 @@ public class BezierCurveEditor : Editor
     public override void OnInspectorGUI()
     {
         DrawButtons();
+        DrawRawPointsValue();
     }
 
     private void DrawButtons()
@@ -87,6 +88,48 @@ public class BezierCurveEditor : Editor
             BezierPoint point = obj.AddComponent<BezierPoint>();
             point.Init();
             Target.Points.Add(point);
+        }
+
+        GUILayout.Space(10);
+    }
+
+    private void DrawRawPointsValue()
+    {
+        foreach (BezierPoint point in Target.Points)
+        {
+            DrawRawPointValue(point);
+        }
+    }
+
+    private void DrawRawPointValue(BezierPoint _point)
+    {
+        EditorGUI.BeginChangeCheck();
+        GUILayout.BeginVertical("Box");
+        Vector3 pos_0 = Vector3.zero;
+        Vector3 pos_1 = Vector3.zero;
+        if (_point.Handles[0] != null)
+        {
+            pos_0 = EditorGUILayout.Vector3Field("Handle Position",
+                _point.Handles[0].LocalPosition);
+        }
+        if (_point.Handles[1] != null)
+        {
+            pos_1 = EditorGUILayout.Vector3Field("Handle Position",
+                _point.GetHandle(1).LocalPosition);
+        }
+        GUILayout.EndVertical();
+        if (EditorGUI.EndChangeCheck())
+        {
+            Undo.RecordObject(Target, "Changed handle transform");
+            if (_point.Handles[0] != null)
+            {
+                _point.GetHandle(0).LocalPosition = pos_0;
+            }
+            if (_point.Handles[1] != null)
+            {
+                _point.GetHandle(1).LocalPosition = pos_1;
+            }
+            SceneView.RepaintAll();
         }
     }
 
