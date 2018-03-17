@@ -27,6 +27,7 @@ public class BezierCurveEditor : Editor
     }
 
     private GUIContent addPointContent = new GUIContent("Add WayPoint", "Add a BezierPoint");
+    private GUIContent deletePointContent = new GUIContent("X", "Deletes this BezierPoint");
 
     void OnEnable()
     {
@@ -95,31 +96,45 @@ public class BezierCurveEditor : Editor
 
     private void DrawRawPointsValue()
     {
-        foreach (BezierPoint point in Target.Points)
+        //foreach (BezierPoint point in Target.Points)
+        for(int i = 0; i< Target.Points.Count; ++i)
         {
-            DrawRawPointValue(point);
+            DrawRawPointValue(i);
         }
     }
 
-    private void DrawRawPointValue(BezierPoint _point)
+    private void DrawRawPointValue(int _pointId)
     {
+        GUILayout.BeginHorizontal();
+
         EditorGUI.BeginChangeCheck();
         GUILayout.BeginVertical("Box");
         Vector3 pos = EditorGUILayout.Vector3Field("Anchor",
-            _point.Position);
+            Target.Points[_pointId].Position);
         Vector3 pos_0 = EditorGUILayout.Vector3Field("Handle 1th",
-            _point.Handles[0].LocalPosition);
+            Target.Points[_pointId].Handles[0].LocalPosition);
         Vector3 pos_1 = EditorGUILayout.Vector3Field("Handle 2rd",
-            _point.GetHandle(1).LocalPosition);
+            Target.Points[_pointId].GetHandle(1).LocalPosition);
         GUILayout.EndVertical();
         if (EditorGUI.EndChangeCheck())
         {
             Undo.RecordObject(Target, "Changed handle transform");
-            _point.Position = pos;
-            _point.GetHandle(0).LocalPosition = pos_0;
-            _point.GetHandle(1).LocalPosition = pos_1;
+            Target.Points[_pointId].Position = pos;
+            Target.Points[_pointId].GetHandle(0).LocalPosition = pos_0;
+            Target.Points[_pointId].GetHandle(1).LocalPosition = pos_1;
             SceneView.RepaintAll();
         }
+
+
+        if (GUILayout.Button(deletePointContent))
+        {
+            Undo.RecordObject(Target, "Deleted a waypoint");
+            Target.Points.Remove(Target.Points[_pointId]);
+            SceneView.RepaintAll();
+        }
+
+        GUILayout.EndHorizontal();
+
     }
 
     private void DrawWaypointHandles(int i)
@@ -156,9 +171,7 @@ public class BezierCurveEditor : Editor
             if (EditorGUI.EndChangeCheck())
             {
                 Undo.RegisterCompleteObjectUndo(Target.Points[i].transform, "Moved waypoint");
-
                 Target.Points[i].Position = pos;
-
                 Repaint();
             }
         }
@@ -182,8 +195,45 @@ public class BezierCurveEditor : Editor
 
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObject(Target.Points[i].transform, "Rotated Waypoint");
+                Undo.RecordObject(Target.Points[i].transform, "Rotated waypoint");
                 Target.Points[i].Rotation = rot;
+                Repaint();
+            }
+        }
+        else if(Tools.current == Tool.Transform)
+        {
+            EditorGUI.BeginChangeCheck();
+            Vector3 pos = Vector3.zero;
+            Quaternion rot = Quaternion.identity;
+
+            if (m_manipulateMode == ManipulationMode.Free)
+            {
+                pos = Handles.FreeMoveHandle(
+                    Target.Points[i].Position,
+                    (Tools.pivotRotation == PivotRotation.Local) ? Target.Points[i].Rotation : Quaternion.identity,
+                    size,
+                    Vector3.zero,
+                    Handles.CubeHandleCap);
+                rot = Handles.FreeRotateHandle(
+                    Target.Points[i].Rotation,
+                    Target.Points[i].Position,
+                    HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.2f);
+            }
+            else if (m_manipulateMode == ManipulationMode.SelectAndTransform)
+            {
+                if (i == m_selectId)
+                {
+                    pos = Handles.PositionHandle(Target.Points[i].Position, (Tools.pivotRotation == PivotRotation.Local) ? Target.Points[i].Rotation : Quaternion.identity);
+                    rot = Handles.RotationHandle(Target.Points[i].Rotation, Target.Points[i].Position);
+                }
+            }
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RegisterCompleteObjectUndo(Target.Points[i].transform, "Transformed waypoint");
+                Target.Points[i].Position = pos;
+                Target.Points[i].Rotation = rot;
+                Repaint();
             }
         }
     }
