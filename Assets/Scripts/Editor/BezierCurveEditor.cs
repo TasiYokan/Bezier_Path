@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 
 [CustomEditor(typeof(BezierCurve))]
-public class BezierCurve_Inspector : Editor
+public class BezierCurveEditor : Editor
 {
     private enum ManipulationMode
     {
@@ -25,6 +25,8 @@ public class BezierCurve_Inspector : Editor
             return m_target;
         }
     }
+
+    private GUIContent addPointContent = new GUIContent("Add WayPoint", "Add a BezierPoint");
 
     void OnEnable()
     {
@@ -68,6 +70,23 @@ public class BezierCurve_Inspector : Editor
             {
                 DrawWaypointHandles(i);
             }
+        }
+    }
+
+    public override void OnInspectorGUI()
+    {
+        DrawButtons();
+    }
+
+    private void DrawButtons()
+    {
+        if (GUILayout.Button(addPointContent))
+        {
+            GameObject obj = new GameObject("BezierPoint ("+Target.Points.Count+")");
+            obj.transform.parent = Target.transform;
+            BezierPoint point = obj.AddComponent<BezierPoint>();
+            point.Init();
+            Target.Points.Add(point);
         }
     }
 

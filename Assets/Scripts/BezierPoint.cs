@@ -1,12 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class BezierPoint : MonoBehaviour
+[System.Serializable]
+public class BezierPoint : MonoBehaviour, IBezierPos
 {
-    private BaseBezierControlPoint m_anchor;
-    public BaseBezierControlPoint primaryHandle;
-    public BaseBezierControlPoint secondaryHandle;
-    private BaseBezierControlPoint m_activeHandle;
+    public int activeHandleId = 1;
+    
+    [SerializeField]
+    private BezierHandle[] m_handles = new BezierHandle[2];
     private Vector3 m_position;
     private Quaternion m_rotation;
 
@@ -26,66 +27,6 @@ public class BezierPoint : MonoBehaviour
         }
     }
 
-    public BaseBezierControlPoint Anchor
-    {
-        get
-        {
-            if (m_anchor == null)
-                m_anchor = GetComponentInChildren<BezierAnchor>();
-            return m_anchor;
-        }
-
-        set
-        {
-            m_anchor = value;
-        }
-    }
-
-    public BaseBezierControlPoint PrimaryHandle
-    {
-        get
-        {
-            if (primaryHandle.gameObject.activeInHierarchy)
-                return primaryHandle;
-            else
-                return Anchor;
-        }
-
-        set
-        {
-            primaryHandle = value;
-        }
-    }
-
-    public BaseBezierControlPoint SecondaryHandle
-    {
-        get
-        {
-            if (secondaryHandle.gameObject.activeInHierarchy)
-                return secondaryHandle;
-            else
-                return Anchor;
-        }
-
-        set
-        {
-            secondaryHandle = value;
-        }
-    }
-
-    public BaseBezierControlPoint ActiveHandle
-    {
-        get
-        {
-            return m_activeHandle;
-        }
-
-        set
-        {
-            m_activeHandle = value;
-        }
-    }
-
     public Vector3 Position
     {
         get
@@ -98,6 +39,19 @@ public class BezierPoint : MonoBehaviour
         {
             m_position = value;
             transform.position = m_position;
+        }
+    }
+
+    public Vector3 LocalPosition
+    {
+        get
+        {
+            return transform.localPosition;
+        }
+
+        set
+        {
+            transform.localPosition = value;
         }
     }
 
@@ -116,13 +70,30 @@ public class BezierPoint : MonoBehaviour
         }
     }
 
-    private void Start()
+    public IBezierPos[] Handles
     {
+        get
+        {
+            return m_handles;
+        }
     }
 
-    private void Update()
+    //private void Awake()
+    //{
+    //    Init();
+    //}
+
+    public void Init()
     {
-        UpdatePosition();
+        if (m_handles[0] == null)
+            m_handles[0] = new BezierHandle(this);
+        if (m_handles[1] == null)
+            m_handles[1] = new BezierHandle(this);
+    }
+
+    public BezierHandle GetHandle(int _id)
+    {
+        return m_handles[_id];
     }
 
     /// <summary>
@@ -130,24 +101,16 @@ public class BezierPoint : MonoBehaviour
     /// </summary>
     private void SmoothHandle(bool _basedOnPrimary = true)
     {
-        if (PrimaryHandle == Anchor || SecondaryHandle == Anchor)
-            return;
+        int refId = _basedOnPrimary ? 0 : 1;
 
-        if (_basedOnPrimary)
-        {
-            SecondaryHandle.Position = 2 * Anchor.Position - PrimaryHandle.Position;
-        }
-        else
-        {
-            PrimaryHandle.Position = 2 * Anchor.Position - SecondaryHandle.Position;
-        }
+        GetHandle(1 - refId).Position = 2 * Position - GetHandle(refId).Position;
     }
 
     public void UpdatePosition()
     {
         if (IsAutoSmooth)
         {
-            SmoothHandle(m_activeHandle != secondaryHandle);
+            SmoothHandle(activeHandleId == 0);
         }
     }
 }

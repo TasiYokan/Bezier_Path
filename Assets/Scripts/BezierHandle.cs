@@ -1,30 +1,47 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class BezierHandle : BaseBezierControlPoint
+[System.Serializable]
+public class BezierHandle : IBezierPos
 {
-    public override void OnMouseDown()
+    [SerializeField]
+    private readonly BezierPoint m_parent;
+    [SerializeField]
+    private Vector3 m_localPosition;
+    [SerializeField]
+    private Vector3 m_position;
+
+    public Vector3 Position
     {
-        base.OnMouseDown();
-
-        transform.parent.GetComponent<BezierPoint>().ActiveHandle = this;
-
-        if(Input.GetKey(KeyCode.LeftAlt)||Input.GetKey(KeyCode.RightAlt))
+        get
         {
-            transform.parent.GetComponent<BezierPoint>().IsAutoSmooth = false;
+            return m_position;
         }
-        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+
+        set
         {
-            transform.parent.GetComponent<BezierPoint>().IsAutoSmooth = true;
-        }
-        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
-        {
-            gameObject.SetActive(false);
+            m_position = value;
+            m_localPosition = Quaternion.Inverse(m_parent.Rotation) * (m_position - m_parent.Position);
         }
     }
 
-    private void OnEnable()
+    public Vector3 LocalPosition
     {
-        //transform.parent.GetComponent<BezierPoint>().ActiveHandle = this;
+        get
+        {
+            return m_localPosition;
+        }
+
+        set
+        {
+            m_localPosition = value;
+            m_position = m_parent.Rotation * m_localPosition + m_parent.Position;
+        }
+    }
+
+    public BezierHandle(BezierPoint _parent)
+    {
+        m_parent = _parent;
+        LocalPosition = Vector3.zero;
     }
 }

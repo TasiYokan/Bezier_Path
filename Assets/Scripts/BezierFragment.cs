@@ -90,10 +90,10 @@ public class BezierFragment
         float u3 = u2 * u;
         float t3 = t2 * _t;
 
-        Vector3 p = u3 * startPoint.Anchor.Position
-            + t3 * endPoint.Anchor.Position
-            + 3 * u2 * _t * startPoint.PrimaryHandle.Position
-            + 3 * u * t2 * endPoint.SecondaryHandle.Position;
+        Vector3 p = u3 * startPoint.Position
+            + t3 * endPoint.Position
+            + 3 * u2 * _t * startPoint.GetHandle(0).Position
+            + 3 * u * t2 * endPoint.GetHandle(1).Position;
 
         return p;
     }
