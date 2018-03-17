@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
+
 [CustomEditor(typeof(BezierCurve))]
 public class BezierCurveEditor : Editor
 {
@@ -12,10 +13,16 @@ public class BezierCurveEditor : Editor
         SelectAndTransform
     }
 
-    private ManipulationMode m_manipulateMode;
-    private BezierCurve m_target;
-    private int m_selectId = -1;
+    private class VisualSetting
+    {
+        public Color pathColor = Color.green;
+        public Color inactivePathColor = Color.gray;
+        public Color handleColor = Color.white;
+    }
 
+    #region Editor Variable
+
+    private BezierCurve m_target;
     public BezierCurve Target
     {
         get
@@ -25,15 +32,29 @@ public class BezierCurveEditor : Editor
             return m_target;
         }
     }
+    private ManipulationMode m_manipulateMode;
+    private VisualSetting m_visualSetting;
+    private int m_selectId = -1;
+    private bool m_drawPathInEditor = true;
+
+    #endregion Editor Variable
+
+    #region Editor GUIs
 
     private GUIContent addPointContent = new GUIContent("Add WayPoint", "Add a BezierPoint");
     private GUIContent deletePointContent = new GUIContent("X", "Deletes this BezierPoint");
     private GUIContent clearAllPointsContent = new GUIContent("Clear All", "Delete all BezierPoint");
 
-    //Serialized Properties
-    private SerializedObject serializedTarget;
-    private SerializedProperty drawPathInEditorProperty;
+    #endregion Editor GUIs
 
+    #region Serialized Properties
+
+    private SerializedObject serializedTarget;
+    private SerializedProperty isAutoConnectProperty;
+
+    #endregion Serialized Properties
+
+    #region Inbuilt APIs
     void OnEnable()
     {
         EditorApplication.update += Update;
@@ -49,27 +70,12 @@ public class BezierCurveEditor : Editor
         EditorApplication.update -= Update;
     }
 
-    void SelectIndex(int _id)
+    public override void OnInspectorGUI()
     {
-        m_selectId = _id;
-        Repaint();
-    }
-
-    void SetupEditorVariables()
-    {
-        m_manipulateMode = ManipulationMode.SelectAndTransform;
-    }
-
-    void GetTargetProperties()
-    {
-        serializedTarget = new SerializedObject(Target);
-        drawPathInEditorProperty = serializedTarget.FindProperty("drawPathInEditor");
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        //Debug.Log("Self update");
+        serializedTarget.Update();
+        DrawButtons();
+        DrawRawPointsValue();
+        serializedTarget.ApplyModifiedProperties();
     }
 
     void OnSceneGUI()
@@ -88,56 +94,32 @@ public class BezierCurveEditor : Editor
         DrawBezierCurve();
     }
 
-    private void DrawBezierCurve()
+    // Update is called once per frame
+    void Update()
     {
-        if (Target.drawPathInEditor)
-        {
-            if (Target.Points.Count >= 2)
-            {
-                for (int i = 0; i < Target.Points.Count; i++)
-                {
-                    Target.Points[i].UpdateHandlesPosition();
-
-                    if (i < Target.Points.Count - 1)
-                    {
-                        var index = Target.Points[i];
-                        var indexNext = Target.Points[i + 1];
-                        Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
-                            indexNext.GetHandle(1).Position, ((Selection.activeGameObject == Target.gameObject) ? ColorSetting.pathColor : ColorSetting.inactivePathColor), null, 5);
-
-
-                    }
-                    else
-                    {
-                        if (Target.isAutoConnect)
-                        {
-                            var index = Target.Points[i];
-                            var indexNext = Target.Points[0];
-                            UnityEditor.Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
-                                indexNext.GetHandle(1).Position, ((Selection.activeGameObject == Target.gameObject) ? ColorSetting.pathColor : ColorSetting.inactivePathColor), null, 5);
-                        }
-                    }
-
-                    Handles.DrawLine(Target.Points[i].Position, Target.Points[i].GetHandle(0).Position);
-                    Handles.DrawLine(Target.Points[i].Position, Target.Points[i].GetHandle(1).Position);
-                }
-            }
-        }
+        //Debug.Log("Self update");
     }
 
-    public override void OnInspectorGUI()
+    #endregion Inbuilt APIs
+    #region Inspector Methods
+
+    void SetupEditorVariables()
     {
-        serializedTarget.Update();
-        DrawButtons();
-        DrawRawPointsValue();
-        serializedTarget.ApplyModifiedProperties();
+        m_manipulateMode = ManipulationMode.SelectAndTransform;
+        m_visualSetting = new VisualSetting();
+        m_drawPathInEditor = PlayerPrefs.GetInt("Editor_DrawPath", 1) == 1;
     }
 
     private void DrawButtons()
     {
-        GUILayout.BeginHorizontal();
-        drawPathInEditorProperty.boolValue = GUILayout.Toggle(drawPathInEditorProperty.boolValue, "Draw curve in Editor", GUILayout.Width(Screen.width));
-        GUILayout.EndHorizontal();
+        EditorGUI.BeginChangeCheck();
+        m_drawPathInEditor = GUILayout.Toggle(m_drawPathInEditor, "Draw path in Editor", GUILayout.Width(Screen.width));
+        if (EditorGUI.EndChangeCheck())
+        {
+            PlayerPrefs.SetInt("Editor_DrawPath", m_drawPathInEditor ? 1 : 0);
+        }
+        
+        isAutoConnectProperty.boolValue = GUILayout.Toggle(isAutoConnectProperty.boolValue, "Connect first and last nodes?", GUILayout.Width(Screen.width));
 
         if (GUILayout.Button(addPointContent))
         {
@@ -145,7 +127,7 @@ public class BezierCurveEditor : Editor
             Target.AddPoint(point);
         }
 
-        if(GUILayout.Button(clearAllPointsContent))
+        if (GUILayout.Button(clearAllPointsContent))
         {
             //TODO: Use Target.RemoveAll() later
             Target.Points.Clear();
@@ -157,7 +139,7 @@ public class BezierCurveEditor : Editor
     private void DrawRawPointsValue()
     {
         //foreach (BezierPoint point in Target.Points)
-        for(int i = 0; i< Target.Points.Count; ++i)
+        for (int i = 0; i < Target.Points.Count; ++i)
         {
             DrawRawPointValue(i);
         }
@@ -184,7 +166,7 @@ public class BezierCurveEditor : Editor
             Target.Points[_pointId].SetHandleLocalPosition(1, pos_1);
             SceneView.RepaintAll();
         }
-        
+
         if (GUILayout.Button(deletePointContent))
         {
             Undo.RecordObject(Target, "Deleted a waypoint");
@@ -196,8 +178,56 @@ public class BezierCurveEditor : Editor
 
     }
 
+    #endregion Inspector Methods
+    #region Scene Methods
+
+    void SelectIndex(int _id)
+    {
+        m_selectId = _id;
+        Repaint();
+    }
+
+    private void DrawBezierCurve()
+    {
+        if (m_drawPathInEditor == false)
+            return;
+
+        if (Target.Points.Count >= 2)
+        {
+            for (int i = 0; i < Target.Points.Count; i++)
+            {
+                Target.Points[i].UpdateHandlesPosition();
+
+                if (i < Target.Points.Count - 1)
+                {
+                    var index = Target.Points[i];
+                    var indexNext = Target.Points[i + 1];
+                    Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
+                        indexNext.GetHandle(1).Position, ((Selection.activeGameObject == Target.gameObject) ? m_visualSetting.pathColor : m_visualSetting.inactivePathColor), null, 5);
+
+
+                }
+                else
+                {
+                    if (Target.isAutoConnect)
+                    {
+                        var index = Target.Points[i];
+                        var indexNext = Target.Points[0];
+                        UnityEditor.Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
+                            indexNext.GetHandle(1).Position, ((Selection.activeGameObject == Target.gameObject) ? m_visualSetting.pathColor : m_visualSetting.inactivePathColor), null, 5);
+                    }
+                }
+
+                Handles.DrawLine(Target.Points[i].Position, Target.Points[i].GetHandle(0).Position);
+                Handles.DrawLine(Target.Points[i].Position, Target.Points[i].GetHandle(1).Position);
+            }
+        }
+    }
     private void DrawWaypointHandles(int i)
     {
+        if (m_drawPathInEditor == false)
+            return;
+
         float size = HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.2f;
         if (m_selectId != i && Event.current.button != 1)
         {
@@ -259,7 +289,7 @@ public class BezierCurveEditor : Editor
                 Repaint();
             }
         }
-        else if(Tools.current == Tool.Transform)
+        else if (Tools.current == Tool.Transform)
         {
             EditorGUI.BeginChangeCheck();
             Vector3 pos = Vector3.zero;
@@ -295,5 +325,12 @@ public class BezierCurveEditor : Editor
                 Repaint();
             }
         }
+    }
+
+    #endregion Scene Methods
+    void GetTargetProperties()
+    {
+        serializedTarget = new SerializedObject(Target);
+        isAutoConnectProperty = serializedTarget.FindProperty("isAutoConnect");
     }
 }

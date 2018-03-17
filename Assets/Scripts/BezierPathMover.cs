@@ -20,6 +20,7 @@ public class BezierPathMover : MonoBehaviour
     public float duration = -1;
     private int m_curFragId = 0;
     private int m_curSampleId = 0;
+    private bool m_isStopped = false;
     // Offset from corresponding curve point 
     private Vector3 m_offset;
 
@@ -41,7 +42,7 @@ public class BezierPathMover : MonoBehaviour
         // If the offset is too tiny, we could hardly notice it actually
         //Debug.DrawLine(path.CurvePoints[curId], transform.position, Color.green);
 
-        if (alwaysUpdateCurrentFrag)
+        if (alwaysUpdateCurrentFrag && m_isStopped == false)
             bezierPath.ForceUpdateOneFrag(m_curFragId);
 
         // For debug
@@ -63,6 +64,7 @@ public class BezierPathMover : MonoBehaviour
 
     private IEnumerator MoveAlongPath()
     {
+        m_isStopped = false;
         m_curFragId = 0;
         m_curSampleId = 0;
         m_offset = Vector3.zero;
@@ -87,6 +89,8 @@ public class BezierPathMover : MonoBehaviour
                 //print("Finish time: " + Time.time);
                 if (onEndCallback != null)
                     onEndCallback.Invoke();
+
+                m_isStopped = true;
                 yield break;
             }
 
