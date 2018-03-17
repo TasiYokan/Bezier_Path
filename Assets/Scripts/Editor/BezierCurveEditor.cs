@@ -9,8 +9,8 @@ public class BezierCurveEditor : Editor
 {
     private enum ManipulationMode
     {
-        Free,
-        SelectAndTransform
+        Free = 0,
+        SelectAndTransform = 1
     }
 
     private class VisualSetting
@@ -105,20 +105,29 @@ public class BezierCurveEditor : Editor
 
     void SetupEditorVariables()
     {
-        m_manipulateMode = ManipulationMode.SelectAndTransform;
-        m_visualSetting = new VisualSetting();
+        m_manipulateMode = (ManipulationMode)PlayerPrefs.GetInt("Editor_ManipulateMode", 0);
         m_drawPathInEditor = PlayerPrefs.GetInt("Editor_DrawPath", 1) == 1;
+        m_visualSetting = new VisualSetting();
     }
 
     private void DrawButtons()
     {
+        EditorGUI.BeginChangeCheck();
+        m_manipulateMode = (ManipulationMode)EditorGUILayout.EnumPopup(
+            "Mode to manipulate node", m_manipulateMode);
+        if (EditorGUI.EndChangeCheck())
+        {
+            PlayerPrefs.SetInt("Editor_ManipulateMode", (int)m_manipulateMode);
+            SceneView.RepaintAll();
+        }
+
         EditorGUI.BeginChangeCheck();
         m_drawPathInEditor = GUILayout.Toggle(m_drawPathInEditor, "Draw path in Editor", GUILayout.Width(Screen.width));
         if (EditorGUI.EndChangeCheck())
         {
             PlayerPrefs.SetInt("Editor_DrawPath", m_drawPathInEditor ? 1 : 0);
         }
-        
+
         isAutoConnectProperty.boolValue = GUILayout.Toggle(isAutoConnectProperty.boolValue, "Connect first and last nodes?", GUILayout.Width(Screen.width));
 
         if (GUILayout.Button(addPointContent))
@@ -228,6 +237,47 @@ public class BezierCurveEditor : Editor
             }
         }
     }
+
+    private Vector3 CreateFreeMoveHandle(int _id)
+    {
+        float size = HandleUtility.GetHandleSize(Target.Points[_id].Position) * 0.3f;
+
+        return Handles.FreeMoveHandle(
+            Target.Points[_id].Position,
+            (Tools.pivotRotation == PivotRotation.Local)
+                ? Target.Points[_id].Rotation : Quaternion.identity,
+            size,
+            Vector3.zero,
+            Handles.CubeHandleCap);
+    }
+
+    private Vector3 CreatePositionHandle(int _id)
+    {
+        return Handles.PositionHandle(
+            Target.Points[_id].Position,
+            (Tools.pivotRotation == PivotRotation.Local)
+                ? Target.Points[_id].Rotation : Quaternion.identity);
+    }
+
+    private Quaternion CreateFreeRotateHandle(int _id)
+    {
+        float size = HandleUtility.GetHandleSize(Target.Points[_id].Position) * 0.4f;
+
+        return Handles.FreeRotateHandle(
+            (Tools.pivotRotation == PivotRotation.Local)
+                ? Target.Points[_id].Rotation : Quaternion.identity,
+            Target.Points[_id].Position,
+            size);
+    }
+
+    private Quaternion CreateRotationHandle(int _id)
+    {
+        return Handles.RotationHandle(
+            (Tools.pivotRotation == PivotRotation.Local)
+                ? Target.Points[_id].Rotation : Quaternion.identity,
+            Target.Points[_id].Position);
+    }
+
     private void DrawWaypointHandles(int i)
     {
         if (m_drawPathInEditor == false)
@@ -249,17 +299,12 @@ public class BezierCurveEditor : Editor
 
             if (m_manipulateMode == ManipulationMode.Free)
             {
-                pos = Handles.FreeMoveHandle(
-                    Target.Points[i].Position,
-                    (Tools.pivotRotation == PivotRotation.Local) ? Target.Points[i].Rotation : Quaternion.identity,
-                    size,
-                    Vector3.zero,
-                    Handles.CubeHandleCap);
+                pos = CreateFreeMoveHandle(i);
             }
             else if (m_manipulateMode == ManipulationMode.SelectAndTransform)
             {
                 if (i == m_selectId)
-                    pos = Handles.PositionHandle(Target.Points[i].Position, (Tools.pivotRotation == PivotRotation.Local) ? Target.Points[i].Rotation : Quaternion.identity);
+                    pos = CreatePositionHandle(i);
             }
 
             if (EditorGUI.EndChangeCheck())
@@ -276,19 +321,12 @@ public class BezierCurveEditor : Editor
 
             if (m_manipulateMode == ManipulationMode.Free)
             {
-                rot = Handles.FreeRotateHandle(
-                    (Tools.pivotRotation == PivotRotation.Local) 
-                    ? Target.Points[i].Rotation : Quaternion.identity,
-                    Target.Points[i].Position,
-                    HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.2f);
+                rot = CreateFreeRotateHandle(i);
             }
             else if (m_manipulateMode == ManipulationMode.SelectAndTransform)
             {
                 if (i == m_selectId)
-                    rot = Handles.RotationHandle(
-                        (Tools.pivotRotation == PivotRotation.Local) 
-                        ? Target.Points[i].Rotation : Quaternion.identity
-                        , Target.Points[i].Position);
+                    rot = CreateRotationHandle(i);
             }
 
             if (EditorGUI.EndChangeCheck())
@@ -306,31 +344,15 @@ public class BezierCurveEditor : Editor
 
             if (m_manipulateMode == ManipulationMode.Free)
             {
-                pos = Handles.FreeMoveHandle(
-                    Target.Points[i].Position,
-                    (Tools.pivotRotation == PivotRotation.Local) 
-                    ? Target.Points[i].Rotation : Quaternion.identity,
-                    size,
-                    Vector3.zero,
-                    Handles.CubeHandleCap);
-                rot = Handles.FreeRotateHandle(
-                    (Tools.pivotRotation == PivotRotation.Local) 
-                    ? Target.Points[i].Rotation : Quaternion.identity,
-                    Target.Points[i].Position,
-                    HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.2f);
+                pos = CreateFreeMoveHandle(i);
+                rot = CreateFreeRotateHandle(i);
             }
             else if (m_manipulateMode == ManipulationMode.SelectAndTransform)
             {
                 if (i == m_selectId)
                 {
-                    pos = Handles.PositionHandle(
-                        Target.Points[i].Position,
-                        (Tools.pivotRotation == PivotRotation.Local) 
-                        ? Target.Points[i].Rotation : Quaternion.identity);
-                    rot = Handles.RotationHandle(
-                        (Tools.pivotRotation == PivotRotation.Local)
-                        ? Target.Points[i].Rotation : Quaternion.identity,
-                        Target.Points[i].Position);
+                    pos = CreatePositionHandle(i);
+                    rot = CreateRotationHandle(i);
                 }
             }
 
