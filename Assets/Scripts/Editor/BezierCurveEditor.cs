@@ -238,44 +238,42 @@ public class BezierCurveEditor : Editor
         }
     }
 
-    private Vector3 CreateFreeMoveHandle(int _id)
+    private void CreateMoveHandle(int _id, ref Vector3 _pos)
     {
-        float size = HandleUtility.GetHandleSize(Target.Points[_id].Position) * 0.3f;
+        Vector3 pos = Target.Points[_id].Position;
+        float size = HandleUtility.GetHandleSize(pos) * 0.4f;
+        Quaternion viewRot = (Tools.pivotRotation == PivotRotation.Local)
+            ? Target.Points[_id].Rotation : Quaternion.identity;
 
-        return Handles.FreeMoveHandle(
-            Target.Points[_id].Position,
-            (Tools.pivotRotation == PivotRotation.Local)
-                ? Target.Points[_id].Rotation : Quaternion.identity,
-            size,
-            Vector3.zero,
-            Handles.CubeHandleCap);
+        if (m_manipulateMode == ManipulationMode.Free)
+        {
+            _pos = Handles.FreeMoveHandle(
+                pos, viewRot, size, Vector3.zero, Handles.CubeHandleCap);
+        }
+        else if (m_manipulateMode == ManipulationMode.SelectAndTransform
+            && _id == m_selectId)
+        {
+            _pos = Handles.PositionHandle(
+                pos, viewRot);
+        }
     }
 
-    private Vector3 CreatePositionHandle(int _id)
+    private void CreateRotateHandle(int _id, ref Quaternion _rot)
     {
-        return Handles.PositionHandle(
-            Target.Points[_id].Position,
-            (Tools.pivotRotation == PivotRotation.Local)
-                ? Target.Points[_id].Rotation : Quaternion.identity);
-    }
+        Vector3 pos = Target.Points[_id].Position;
+        float size = HandleUtility.GetHandleSize(pos) * 0.4f;
+        Quaternion viewRot = (Tools.pivotRotation == PivotRotation.Local)
+            ? Target.Points[_id].Rotation : Quaternion.identity;
 
-    private Quaternion CreateFreeRotateHandle(int _id)
-    {
-        float size = HandleUtility.GetHandleSize(Target.Points[_id].Position) * 0.4f;
-
-        return Handles.FreeRotateHandle(
-            (Tools.pivotRotation == PivotRotation.Local)
-                ? Target.Points[_id].Rotation : Quaternion.identity,
-            Target.Points[_id].Position,
-            size);
-    }
-
-    private Quaternion CreateRotationHandle(int _id)
-    {
-        return Handles.RotationHandle(
-            (Tools.pivotRotation == PivotRotation.Local)
-                ? Target.Points[_id].Rotation : Quaternion.identity,
-            Target.Points[_id].Position);
+        if (m_manipulateMode == ManipulationMode.Free)
+        {
+            _rot = Handles.FreeRotateHandle(viewRot, pos, size);
+        }
+        else if (m_manipulateMode == ManipulationMode.SelectAndTransform
+            && _id == m_selectId)
+        {
+            _rot = Handles.RotationHandle(viewRot, pos);
+        }
     }
 
     private void DrawWaypointHandles(int i)
@@ -292,77 +290,29 @@ public class BezierCurveEditor : Editor
             }
         }
 
-        if (Tools.current == Tool.Move)
+        EditorGUI.BeginChangeCheck();
+        Vector3 pos = Target.Points[i].Position;
+        Quaternion rot = Target.Points[i].Rotation;
+
+        if (Tools.current == Tool.Move
+               || Tools.current == Tool.Rect
+               || Tools.current == Tool.Transform)
         {
-            EditorGUI.BeginChangeCheck();
-            Vector3 pos = Vector3.zero;
-
-            if (m_manipulateMode == ManipulationMode.Free)
-            {
-                pos = CreateFreeMoveHandle(i);
-            }
-            else if (m_manipulateMode == ManipulationMode.SelectAndTransform)
-            {
-                if (i == m_selectId)
-                    pos = CreatePositionHandle(i);
-            }
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RegisterCompleteObjectUndo(Target, "Moved waypoint");
-                Target.SetAnchorPosition(i, pos);
-                Repaint();
-            }
+            CreateMoveHandle(i, ref pos);
         }
-        else if (Tools.current == Tool.Rotate)
+        if (Tools.current == Tool.Rotate
+            || Tools.current == Tool.Rect
+            || Tools.current == Tool.Transform)
         {
-            EditorGUI.BeginChangeCheck();
-            Quaternion rot = Quaternion.identity;
-
-            if (m_manipulateMode == ManipulationMode.Free)
-            {
-                rot = CreateFreeRotateHandle(i);
-            }
-            else if (m_manipulateMode == ManipulationMode.SelectAndTransform)
-            {
-                if (i == m_selectId)
-                    rot = CreateRotationHandle(i);
-            }
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RecordObject(Target, "Rotated waypoint");
-                Target.SetAnchorRotation(i, rot);
-                Repaint();
-            }
+            CreateRotateHandle(i, ref rot);
         }
-        else if (Tools.current == Tool.Transform || Tools.current == Tool.Rect)
+
+        if (EditorGUI.EndChangeCheck())
         {
-            EditorGUI.BeginChangeCheck();
-            Vector3 pos = Vector3.zero;
-            Quaternion rot = Quaternion.identity;
-
-            if (m_manipulateMode == ManipulationMode.Free)
-            {
-                pos = CreateFreeMoveHandle(i);
-                rot = CreateFreeRotateHandle(i);
-            }
-            else if (m_manipulateMode == ManipulationMode.SelectAndTransform)
-            {
-                if (i == m_selectId)
-                {
-                    pos = CreatePositionHandle(i);
-                    rot = CreateRotationHandle(i);
-                }
-            }
-
-            if (EditorGUI.EndChangeCheck())
-            {
-                Undo.RegisterCompleteObjectUndo(Target, "Transformed waypoint");
-                Target.SetAnchorPosition(i, pos);
-                Target.SetAnchorRotation(i, rot);
-                Repaint();
-            }
+            Undo.RegisterCompleteObjectUndo(Target, "Transformed waypoint");
+            Target.SetAnchorRotation(i, rot);
+            Target.SetAnchorPosition(i, pos);
+            Repaint();
         }
     }
 
