@@ -5,7 +5,7 @@ using System.Collections;
 public class BezierPoint
 {
     public int activeHandleId = 1;
-    
+
     [SerializeField]
     private BezierHandle[] m_handles = new BezierHandle[2];
     [SerializeField]
@@ -57,34 +57,44 @@ public class BezierPoint
         }
     }
 
-    public BezierHandle[] Handles
+    /// <summary>
+    /// Avoid misset values when deserializing.
+    /// Only used when click add point button or create one in game.
+    /// </summary>
+    /// <param name="_isFirstTime"></param>
+    public BezierPoint(bool _isFirstTime)
     {
-        get
-        {
-            return m_handles;
-        }
-    }
-
-    public BezierPoint()
-    {
+        if (_isFirstTime == false)
+            return;
+        
         m_position = Vector3.zero;
         m_rotation = Quaternion.identity;
 
-        if (m_handles[0] == null)
-            m_handles[0] = new BezierHandle(this);
-        if (m_handles[1] == null)
-            m_handles[1] = new BezierHandle(this);
+        m_handles[0] = new BezierHandle();
+        m_handles[1] = new BezierHandle();
     }
 
     public void UpdateHandlesPosition()
     {
-        m_handles[0].UpdatePositionBasedOnParent();
-        m_handles[1].UpdatePositionBasedOnParent();
+        SetHandleLocalPosition(0, GetHandle(0).LocalPosition);
+        SetHandleLocalPosition(1, GetHandle(1).LocalPosition);
     }
 
     public BezierHandle GetHandle(int _id)
     {
         return m_handles[_id];
+    }
+
+    public void SetHandlePosition(int _id, Vector3 _position)
+    {
+        GetHandle(_id).Position = _position;
+        GetHandle(_id).LocalPosition = Quaternion.Inverse(this.Rotation) * (_position - this.Position);
+    }
+
+    public void SetHandleLocalPosition(int _id, Vector3 _localPosition)
+    {
+        GetHandle(_id).LocalPosition = _localPosition;
+        GetHandle(_id).Position = this.Rotation * _localPosition + this.Position;
     }
 
     /// <summary>

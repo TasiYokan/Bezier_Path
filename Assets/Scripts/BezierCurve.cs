@@ -247,39 +247,39 @@ public class BezierCurve : MonoBehaviour
 #if UNITY_EDITOR
     public void OnDrawGizmos()
     {
-        if (Selection.activeGameObject == gameObject || drawPathInEditor)
-        {
-            if (m_points.Count >= 2)
-            {
-                for (int i = 0; i < m_points.Count; i++)
-                {
-                    m_points[i].UpdateHandlesPosition();
+        //if (Selection.activeGameObject == gameObject || drawPathInEditor)
+        //{
+        //    if (m_points.Count >= 2)
+        //    {
+        //        for (int i = 0; i < m_points.Count; i++)
+        //        {
+        //            m_points[i].UpdateHandlesPosition();
 
-                    if (i < m_points.Count - 1)
-                    {
-                        var index = m_points[i];
-                        var indexNext = m_points[i + 1];
-                        Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
-                            indexNext.GetHandle(1).Position, ((Selection.activeGameObject == gameObject) ? ColorSetting.pathColor : ColorSetting.inactivePathColor), null, 5);
+        //            if (i < m_points.Count - 1)
+        //            {
+        //                var index = m_points[i];
+        //                var indexNext = m_points[i + 1];
+        //                Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
+        //                    indexNext.GetHandle(1).Position, ((Selection.activeGameObject == gameObject) ? ColorSetting.pathColor : ColorSetting.inactivePathColor), null, 5);
 
                         
-                    }
-                    else
-                    {
-                        if (isAutoConnect)
-                        {
-                            var index = m_points[i];
-                            var indexNext = m_points[0];
-                            UnityEditor.Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
-                                indexNext.GetHandle(1).Position, ((UnityEditor.Selection.activeGameObject == gameObject) ? ColorSetting.pathColor : ColorSetting.inactivePathColor), null, 5);
-                        }
-                    }
+        //            }
+        //            else
+        //            {
+        //                if (isAutoConnect)
+        //                {
+        //                    var index = m_points[i];
+        //                    var indexNext = m_points[0];
+        //                    UnityEditor.Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
+        //                        indexNext.GetHandle(1).Position, ((UnityEditor.Selection.activeGameObject == gameObject) ? ColorSetting.pathColor : ColorSetting.inactivePathColor), null, 5);
+        //                }
+        //            }
 
-                    Handles.DrawLine(m_points[i].Position, m_points[i].GetHandle(0).Position);
-                    Handles.DrawLine(m_points[i].Position, m_points[i].GetHandle(1).Position);
-                }
-            }
-        }
+        //            Handles.DrawLine(m_points[i].Position, m_points[i].GetHandle(0).Position);
+        //            Handles.DrawLine(m_points[i].Position, m_points[i].GetHandle(1).Position);
+        //        }
+        //    }
+        //}
     }
 #endif
 }

@@ -6,11 +6,10 @@ using UnityEngine.Assertions;
 public class BezierHandle : IBezierPos
 {
     [SerializeField]
-    private BezierPoint m_parent;
+    private Vector3 m_position;
     [SerializeField]
     private Vector3 m_localPosition;
-    [SerializeField]
-    private Vector3 m_position;
+    
 
     public Vector3 Position
     {
@@ -22,7 +21,6 @@ public class BezierHandle : IBezierPos
         set
         {
             m_position = value;
-            m_localPosition = Quaternion.Inverse(m_parent.Rotation) * (m_position - m_parent.Position);
         }
     }
 
@@ -36,20 +34,6 @@ public class BezierHandle : IBezierPos
         set
         {
             m_localPosition = value;
-            m_position = m_parent.Rotation * m_localPosition + m_parent.Position;
         }
-    }
-
-    public BezierHandle(BezierPoint _parent)
-    {
-        m_parent = _parent;
-        LocalPosition = Vector3.zero;
-    }
-
-    public void UpdatePositionBasedOnParent()
-    {
-        Assert.IsNotNull(m_parent, "Parent should be set before applying local position.");
-
-        LocalPosition = m_localPosition;
     }
 }

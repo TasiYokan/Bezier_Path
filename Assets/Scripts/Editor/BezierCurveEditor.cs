@@ -30,6 +30,10 @@ public class BezierCurveEditor : Editor
     private GUIContent deletePointContent = new GUIContent("X", "Deletes this BezierPoint");
     private GUIContent clearAllPointsContent = new GUIContent("Clear All", "Delete all BezierPoint");
 
+    //Serialized Properties
+    private SerializedObject serializedTarget;
+    private SerializedProperty drawPathInEditorProperty;
+
     void OnEnable()
     {
         EditorApplication.update += Update;
@@ -37,6 +41,7 @@ public class BezierCurveEditor : Editor
         if (Target == null) return;
 
         SetupEditorVariables();
+        GetTargetProperties();
     }
 
     void OnDisable()
@@ -53,6 +58,12 @@ public class BezierCurveEditor : Editor
     void SetupEditorVariables()
     {
         m_manipulateMode = ManipulationMode.SelectAndTransform;
+    }
+
+    void GetTargetProperties()
+    {
+        serializedTarget = new SerializedObject(Target);
+        drawPathInEditorProperty = serializedTarget.FindProperty("drawPathInEditor");
     }
 
     // Update is called once per frame
@@ -73,19 +84,64 @@ public class BezierCurveEditor : Editor
                 DrawWaypointHandles(i);
             }
         }
+
+        DrawBezierCurve();
+    }
+
+    private void DrawBezierCurve()
+    {
+        if (Target.drawPathInEditor)
+        {
+            if (Target.Points.Count >= 2)
+            {
+                for (int i = 0; i < Target.Points.Count; i++)
+                {
+                    Target.Points[i].UpdateHandlesPosition();
+
+                    if (i < Target.Points.Count - 1)
+                    {
+                        var index = Target.Points[i];
+                        var indexNext = Target.Points[i + 1];
+                        Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
+                            indexNext.GetHandle(1).Position, ((Selection.activeGameObject == Target.gameObject) ? ColorSetting.pathColor : ColorSetting.inactivePathColor), null, 5);
+
+
+                    }
+                    else
+                    {
+                        if (Target.isAutoConnect)
+                        {
+                            var index = Target.Points[i];
+                            var indexNext = Target.Points[0];
+                            UnityEditor.Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
+                                indexNext.GetHandle(1).Position, ((Selection.activeGameObject == Target.gameObject) ? ColorSetting.pathColor : ColorSetting.inactivePathColor), null, 5);
+                        }
+                    }
+
+                    Handles.DrawLine(Target.Points[i].Position, Target.Points[i].GetHandle(0).Position);
+                    Handles.DrawLine(Target.Points[i].Position, Target.Points[i].GetHandle(1).Position);
+                }
+            }
+        }
     }
 
     public override void OnInspectorGUI()
     {
+        serializedTarget.Update();
         DrawButtons();
         DrawRawPointsValue();
+        serializedTarget.ApplyModifiedProperties();
     }
 
     private void DrawButtons()
     {
+        GUILayout.BeginHorizontal();
+        drawPathInEditorProperty.boolValue = GUILayout.Toggle(drawPathInEditorProperty.boolValue, "Draw curve in Editor", GUILayout.Width(Screen.width));
+        GUILayout.EndHorizontal();
+
         if (GUILayout.Button(addPointContent))
         {
-            BezierPoint point = new BezierPoint();
+            BezierPoint point = new BezierPoint(true);
             Target.AddPoint(point);
         }
 
@@ -116,7 +172,7 @@ public class BezierCurveEditor : Editor
         Vector3 pos = EditorGUILayout.Vector3Field("Anchor",
             Target.Points[_pointId].Position);
         Vector3 pos_0 = EditorGUILayout.Vector3Field("Handle 1th",
-            Target.Points[_pointId].Handles[0].LocalPosition);
+            Target.Points[_pointId].GetHandle(0).LocalPosition);
         Vector3 pos_1 = EditorGUILayout.Vector3Field("Handle 2rd",
             Target.Points[_pointId].GetHandle(1).LocalPosition);
         GUILayout.EndVertical();
@@ -124,8 +180,8 @@ public class BezierCurveEditor : Editor
         {
             Undo.RecordObject(Target, "Changed handle transform");
             Target.Points[_pointId].Position = pos;
-            Target.Points[_pointId].GetHandle(0).LocalPosition = pos_0;
-            Target.Points[_pointId].GetHandle(1).LocalPosition = pos_1;
+            Target.Points[_pointId].SetHandleLocalPosition(0, pos_0);
+            Target.Points[_pointId].SetHandleLocalPosition(1, pos_1);
             SceneView.RepaintAll();
         }
         
@@ -159,11 +215,11 @@ public class BezierCurveEditor : Editor
             if (m_manipulateMode == ManipulationMode.Free)
             {
                 pos = Handles.FreeMoveHandle(
-                Target.Points[i].Position,
-                (Tools.pivotRotation == PivotRotation.Local) ? Target.Points[i].Rotation : Quaternion.identity,
-                size,
-                Vector3.zero,
-                Handles.CubeHandleCap);
+                    Target.Points[i].Position,
+                    (Tools.pivotRotation == PivotRotation.Local) ? Target.Points[i].Rotation : Quaternion.identity,
+                    size,
+                    Vector3.zero,
+                    Handles.CubeHandleCap);
             }
             else if (m_manipulateMode == ManipulationMode.SelectAndTransform)
             {
