@@ -282,6 +282,8 @@ public class BezierCurve : MonoBehaviour
             {
                 for (int i = 0; i < m_points.Count; i++)
                 {
+                    m_points[i].UpdateHandlesPosition();
+
                     if (i < m_points.Count - 1)
                     {
                         var index = m_points[i];

@@ -71,18 +71,13 @@ public class BezierPoint : MonoBehaviour, IBezierPos
         }
     }
 
-    public IBezierPos[] Handles
+    public BezierHandle[] Handles
     {
         get
         {
             return m_handles;
         }
     }
-
-    //private void Awake()
-    //{
-    //    Init();
-    //}
 
     public void Init()
     {
@@ -92,7 +87,7 @@ public class BezierPoint : MonoBehaviour, IBezierPos
             m_handles[1] = new BezierHandle(this);
     }
 
-    private void UpdateHandlesPosition()
+    public void UpdateHandlesPosition()
     {
         m_handles[0].UpdatePositionBasedOnParent();
         m_handles[1].UpdatePositionBasedOnParent();

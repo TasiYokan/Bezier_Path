@@ -6,7 +6,7 @@ using UnityEngine.Assertions;
 public class BezierHandle : IBezierPos
 {
     [SerializeField]
-    private readonly BezierPoint m_parent;
+    private BezierPoint m_parent;
     [SerializeField]
     private Vector3 m_localPosition;
     [SerializeField]

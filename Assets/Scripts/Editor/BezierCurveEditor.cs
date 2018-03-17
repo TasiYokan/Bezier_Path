@@ -83,7 +83,7 @@ public class BezierCurveEditor : Editor
     {
         if (GUILayout.Button(addPointContent))
         {
-            GameObject obj = new GameObject("BezierPoint ("+Target.Points.Count+")");
+            GameObject obj = new GameObject("BezierPoint (" + Target.Points.Count + ")");
             obj.transform.parent = Target.transform;
             BezierPoint point = obj.AddComponent<BezierPoint>();
             point.Init();
@@ -105,30 +105,19 @@ public class BezierCurveEditor : Editor
     {
         EditorGUI.BeginChangeCheck();
         GUILayout.BeginVertical("Box");
-        Vector3 pos_0 = Vector3.zero;
-        Vector3 pos_1 = Vector3.zero;
-        if (_point.Handles[0] != null)
-        {
-            pos_0 = EditorGUILayout.Vector3Field("Handle Position",
-                _point.Handles[0].LocalPosition);
-        }
-        if (_point.Handles[1] != null)
-        {
-            pos_1 = EditorGUILayout.Vector3Field("Handle Position",
-                _point.GetHandle(1).LocalPosition);
-        }
+        Vector3 pos = EditorGUILayout.Vector3Field("Anchor",
+            _point.Position);
+        Vector3 pos_0 = EditorGUILayout.Vector3Field("Handle 1th",
+            _point.Handles[0].LocalPosition);
+        Vector3 pos_1 = EditorGUILayout.Vector3Field("Handle 2rd",
+            _point.GetHandle(1).LocalPosition);
         GUILayout.EndVertical();
         if (EditorGUI.EndChangeCheck())
         {
             Undo.RecordObject(Target, "Changed handle transform");
-            if (_point.Handles[0] != null)
-            {
-                _point.GetHandle(0).LocalPosition = pos_0;
-            }
-            if (_point.Handles[1] != null)
-            {
-                _point.GetHandle(1).LocalPosition = pos_1;
-            }
+            _point.Position = pos;
+            _point.GetHandle(0).LocalPosition = pos_0;
+            _point.GetHandle(1).LocalPosition = pos_1;
             SceneView.RepaintAll();
         }
     }
@@ -166,8 +155,11 @@ public class BezierCurveEditor : Editor
 
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObject(Target.Points[i].transform, "Moved Waypoint");
+                Undo.RegisterCompleteObjectUndo(Target.Points[i].transform, "Moved waypoint");
+
                 Target.Points[i].Position = pos;
+
+                Repaint();
             }
         }
         else if (Tools.current == Tool.Rotate)
