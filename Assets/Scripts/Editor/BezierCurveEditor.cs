@@ -28,6 +28,7 @@ public class BezierCurveEditor : Editor
 
     private GUIContent addPointContent = new GUIContent("Add WayPoint", "Add a BezierPoint");
     private GUIContent deletePointContent = new GUIContent("X", "Deletes this BezierPoint");
+    private GUIContent clearAllPointsContent = new GUIContent("Clear All", "Delete all BezierPoint");
 
     void OnEnable()
     {
@@ -84,11 +85,14 @@ public class BezierCurveEditor : Editor
     {
         if (GUILayout.Button(addPointContent))
         {
-            GameObject obj = new GameObject("BezierPoint (" + Target.Points.Count + ")");
-            obj.transform.parent = Target.transform;
-            BezierPoint point = obj.AddComponent<BezierPoint>();
-            point.Init();
-            Target.Points.Add(point);
+            BezierPoint point = new BezierPoint();
+            Target.AddPoint(point);
+        }
+
+        if(GUILayout.Button(clearAllPointsContent))
+        {
+            //TODO: Use Target.RemoveAll() later
+            Target.Points.Clear();
         }
 
         GUILayout.Space(10);
@@ -124,12 +128,11 @@ public class BezierCurveEditor : Editor
             Target.Points[_pointId].GetHandle(1).LocalPosition = pos_1;
             SceneView.RepaintAll();
         }
-
-
+        
         if (GUILayout.Button(deletePointContent))
         {
             Undo.RecordObject(Target, "Deleted a waypoint");
-            Target.Points.Remove(Target.Points[_pointId]);
+            Target.RemovePoint(Target.Points[_pointId]);
             SceneView.RepaintAll();
         }
 
@@ -170,7 +173,7 @@ public class BezierCurveEditor : Editor
 
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RegisterCompleteObjectUndo(Target.Points[i].transform, "Moved waypoint");
+                Undo.RegisterCompleteObjectUndo(Target, "Moved waypoint");
                 Target.Points[i].Position = pos;
                 Repaint();
             }
@@ -195,7 +198,7 @@ public class BezierCurveEditor : Editor
 
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RecordObject(Target.Points[i].transform, "Rotated waypoint");
+                Undo.RecordObject(Target, "Rotated waypoint");
                 Target.Points[i].Rotation = rot;
                 Repaint();
             }
@@ -230,7 +233,7 @@ public class BezierCurveEditor : Editor
 
             if (EditorGUI.EndChangeCheck())
             {
-                Undo.RegisterCompleteObjectUndo(Target.Points[i].transform, "Transformed waypoint");
+                Undo.RegisterCompleteObjectUndo(Target, "Transformed waypoint");
                 Target.Points[i].Position = pos;
                 Target.Points[i].Rotation = rot;
                 Repaint();

@@ -2,13 +2,15 @@
 using System.Collections;
 
 [System.Serializable]
-public class BezierPoint : MonoBehaviour, IBezierPos
+public class BezierPoint
 {
     public int activeHandleId = 1;
     
     [SerializeField]
     private BezierHandle[] m_handles = new BezierHandle[2];
+    [SerializeField]
     private Vector3 m_position;
+    [SerializeField]
     private Quaternion m_rotation;
 
     [SerializeField]
@@ -31,28 +33,13 @@ public class BezierPoint : MonoBehaviour, IBezierPos
     {
         get
         {
-            m_position = transform.position;
             return m_position;
         }
 
         set
         {
             m_position = value;
-            transform.position = m_position;
             UpdateHandlesPosition();
-        }
-    }
-
-    public Vector3 LocalPosition
-    {
-        get
-        {
-            return transform.localPosition;
-        }
-
-        set
-        {
-            transform.localPosition = value;
         }
     }
 
@@ -60,14 +47,13 @@ public class BezierPoint : MonoBehaviour, IBezierPos
     {
         get
         {
-            m_rotation = transform.rotation;
             return m_rotation;
         }
 
         set
         {
             m_rotation = value;
-            transform.rotation = m_rotation;
+            UpdateHandlesPosition();
         }
     }
 
@@ -79,8 +65,11 @@ public class BezierPoint : MonoBehaviour, IBezierPos
         }
     }
 
-    public void Init()
+    public BezierPoint()
     {
+        m_position = Vector3.zero;
+        m_rotation = Quaternion.identity;
+
         if (m_handles[0] == null)
             m_handles[0] = new BezierHandle(this);
         if (m_handles[1] == null)

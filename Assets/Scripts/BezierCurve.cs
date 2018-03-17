@@ -16,6 +16,7 @@ public class ColorSetting
 
 public class BezierCurve : MonoBehaviour
 {
+    [SerializeField]
     private List<BezierPoint> m_points;
     private List<BezierFragment> m_fragments;
 
@@ -50,40 +51,19 @@ public class BezierCurve : MonoBehaviour
     {
         m_lineRenderer = GetComponent<LineRenderer>();
 
-        InitAllPoints();
-        HideNodes();
-
         InitFragmentsFromPoints();
     }
 
-    private void HideNodes()
+    public void AddPoint(BezierPoint _point)
     {
-        if (hideNodesInGame)
-        {
-            foreach (BezierPoint point in m_points)
-            {
-                MeshRenderer[] meshes = point.GetComponentsInChildren<MeshRenderer>();
-                for (int i = 0; i < meshes.Length; ++i)
-                {
-                    meshes[i].enabled = false;
-                }
-            }
-        }
+        m_points.Add(_point);
+        InitFragmentsFromPoints();
     }
 
-    private bool CheckIfPointCountChange()
+    public void RemovePoint(BezierPoint _point)
     {
-        int prevCount = m_points.Count;
-        return (GetComponentsInChildren<BezierPoint>().Length != prevCount);
-    }
-
-    private void InitAllPoints()
-    {
-        m_points = GetComponentsInChildren<BezierPoint>().ToList();
-        m_points.Sort((lhs, rhs) =>
-        {
-            return lhs.gameObject.name.CompareTo(rhs.gameObject.name);
-        });
+        m_points.Remove(_point);
+        InitFragmentsFromPoints();
     }
 
     private void InitFragmentsFromPoints()
@@ -113,13 +93,6 @@ public class BezierCurve : MonoBehaviour
         if (drawDebugPath)
             DrawDebugCurve();
         //ForceUpdateFrags();
-
-        if(CheckIfPointCountChange())
-        {
-            InitAllPoints();
-            HideNodes();
-            InitFragmentsFromPoints();
-        }
     }
 
     public void GetCurvePos(ref int _fragId, ref int _sampleId, float _speed, ref Vector3 _offset)
@@ -274,8 +247,6 @@ public class BezierCurve : MonoBehaviour
 #if UNITY_EDITOR
     public void OnDrawGizmos()
     {
-        InitAllPoints();
-
         if (Selection.activeGameObject == gameObject || drawPathInEditor)
         {
             if (m_points.Count >= 2)
