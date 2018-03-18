@@ -35,6 +35,7 @@ public class BezierCurveEditor : Editor
     private ManipulationMode m_manipulateMode;
     private VisualSetting m_visualSetting;
     private int m_selectId = -1;
+    private int m_handleSelectId = -1;
     private bool m_drawPathInEditor = true;
 
     #endregion Editor Variable
@@ -87,7 +88,8 @@ public class BezierCurveEditor : Editor
         {
             for (int i = 0; i < Target.Points.Count; ++i)
             {
-                DrawWaypointHandles(i);
+                DrawWaypointSelectHandles(i);
+                DrawWaypointTransformHandles(i);
             }
         }
 
@@ -199,6 +201,12 @@ public class BezierCurveEditor : Editor
         Repaint();
     }
 
+    void SelectHandleIndex(int _id)
+    {
+        m_handleSelectId = _id;
+        Repaint();
+    }
+
     private void DrawBezierCurve()
     {
         if (m_drawPathInEditor == false)
@@ -238,23 +246,33 @@ public class BezierCurveEditor : Editor
         }
     }
 
-    private void CreateMoveHandle(int _id, ref Vector3 _pos)
+    private void CreateMoveHandle(int _id, ref Vector3 _pos, ref Vector3 _pos_0, ref Vector3 _pos_1)
     {
         Vector3 pos = Target.Points[_id].Position;
-        float size = HandleUtility.GetHandleSize(pos) * 0.4f;
+        float size = HandleUtility.GetHandleSize(pos) * 0.1f;
         Quaternion viewRot = (Tools.pivotRotation == PivotRotation.Local)
             ? Target.Points[_id].Rotation : Quaternion.identity;
 
         if (m_manipulateMode == ManipulationMode.Free)
         {
             _pos = Handles.FreeMoveHandle(
-                pos, viewRot, size, Vector3.zero, Handles.CubeHandleCap);
+                pos, viewRot, size * 3, Vector3.zero, Handles.CubeHandleCap);
+
+            _pos_0 = Handles.FreeMoveHandle(
+                _pos_0, viewRot, size, Vector3.zero, Handles.SphereHandleCap);
+            _pos_1 = Handles.FreeMoveHandle(
+                _pos_1, viewRot, size, Vector3.zero, Handles.SphereHandleCap);
         }
         else if (m_manipulateMode == ManipulationMode.SelectAndTransform
             && _id == m_selectId)
         {
             _pos = Handles.PositionHandle(
                 pos, viewRot);
+
+            _pos_0 = Handles.PositionHandle(
+                _pos_0, viewRot);
+            _pos_1 = Handles.PositionHandle(
+                _pos_1, viewRot);
         }
     }
 
@@ -276,11 +294,8 @@ public class BezierCurveEditor : Editor
         }
     }
 
-    private void DrawWaypointHandles(int i)
+    private void DrawWaypointSelectHandles(int i)
     {
-        if (m_drawPathInEditor == false)
-            return;
-
         float size = HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.2f;
         if (m_selectId != i && Event.current.button != 1)
         {
@@ -289,16 +304,24 @@ public class BezierCurveEditor : Editor
                 SelectIndex(i);
             }
         }
+    }
+
+    private void DrawWaypointTransformHandles(int i)
+    {
+        if (m_drawPathInEditor == false)
+            return;
 
         EditorGUI.BeginChangeCheck();
         Vector3 pos = Target.Points[i].Position;
         Quaternion rot = Target.Points[i].Rotation;
+        Vector3 pos_0 = Target.Points[i].GetHandle(0).Position;
+        Vector3 pos_1 = Target.Points[i].GetHandle(1).Position;
 
         if (Tools.current == Tool.Move
                || Tools.current == Tool.Rect
                || Tools.current == Tool.Transform)
         {
-            CreateMoveHandle(i, ref pos);
+            CreateMoveHandle(i, ref pos, ref pos_0, ref pos_1);
         }
         if (Tools.current == Tool.Rotate
             || Tools.current == Tool.Rect
@@ -312,6 +335,8 @@ public class BezierCurveEditor : Editor
             Undo.RegisterCompleteObjectUndo(Target, "Transformed waypoint");
             Target.SetAnchorRotation(i, rot);
             Target.SetAnchorPosition(i, pos);
+            //Target.Points[i].SetHandlePosition(0, pos_0);
+            //Target.Points[i].SetHandlePosition(1, pos_1);
             Repaint();
         }
     }
