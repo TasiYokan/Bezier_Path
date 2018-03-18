@@ -212,7 +212,8 @@ public class BezierCurveEditor : Editor
         if (m_drawPathInEditor == false)
             return;
 
-        Target.UpdateAnchorsTransform();
+        if (Target.Points != null)
+            Target.UpdateAnchorsTransform();
 
         if (Target.Points.Count >= 2)
         {
@@ -249,60 +250,106 @@ public class BezierCurveEditor : Editor
     private void CreateMoveHandle(int _id, ref Vector3 _pos, ref Vector3 _pos_0, ref Vector3 _pos_1)
     {
         Vector3 pos = Target.Points[_id].Position;
-        float size = HandleUtility.GetHandleSize(pos) * 0.1f;
+        float size = 0.2f;//HandleUtility.GetHandleSize(pos) * 0.1f;
         Quaternion viewRot = (Tools.pivotRotation == PivotRotation.Local)
             ? Target.Points[_id].Rotation : Quaternion.identity;
 
         if (m_manipulateMode == ManipulationMode.Free)
         {
-            _pos = Handles.FreeMoveHandle(
-                pos, viewRot, size * 3, Vector3.zero, Handles.CubeHandleCap);
+            if (m_selectId == _id && m_handleSelectId == -1)
+            {
+                _pos = Handles.FreeMoveHandle(
+                    pos, viewRot, size * 3, Vector3.zero, Handles.CubeHandleCap);
+            }
 
-            _pos_0 = Handles.FreeMoveHandle(
-                _pos_0, viewRot, size, Vector3.zero, Handles.SphereHandleCap);
-            _pos_1 = Handles.FreeMoveHandle(
-                _pos_1, viewRot, size, Vector3.zero, Handles.SphereHandleCap);
+            if (m_selectId == _id && m_handleSelectId == 0)
+            {
+                _pos_0 = Handles.FreeMoveHandle(
+                    _pos_0, viewRot, size, Vector3.zero, Handles.SphereHandleCap);
+            }
+            if (m_selectId == _id && m_handleSelectId == 1)
+            {
+                _pos_1 = Handles.FreeMoveHandle(
+                    _pos_1, viewRot, size, Vector3.zero, Handles.SphereHandleCap);
+            }
         }
         else if (m_manipulateMode == ManipulationMode.SelectAndTransform
             && _id == m_selectId)
         {
-            _pos = Handles.PositionHandle(
-                pos, viewRot);
+            if (m_handleSelectId == -1)
+            {
+                _pos = Handles.PositionHandle(pos, viewRot);
+            }
 
-            _pos_0 = Handles.PositionHandle(
-                _pos_0, viewRot);
-            _pos_1 = Handles.PositionHandle(
-                _pos_1, viewRot);
+            if (m_handleSelectId == 0)
+            {
+                _pos_0 = Handles.PositionHandle(_pos_0, viewRot);
+            }
+            if (m_handleSelectId == 1)
+            {
+                _pos_1 = Handles.PositionHandle(_pos_1, viewRot);
+            }
         }
     }
 
     private void CreateRotateHandle(int _id, ref Quaternion _rot)
     {
         Vector3 pos = Target.Points[_id].Position;
-        float size = HandleUtility.GetHandleSize(pos) * 0.4f;
+        float size = 0.2f;//HandleUtility.GetHandleSize(pos) * 0.1f;
         Quaternion viewRot = (Tools.pivotRotation == PivotRotation.Local)
             ? Target.Points[_id].Rotation : Quaternion.identity;
 
         if (m_manipulateMode == ManipulationMode.Free)
         {
-            _rot = Handles.FreeRotateHandle(viewRot, pos, size);
+            _rot = Handles.FreeRotateHandle(viewRot, pos, size * 4);
         }
         else if (m_manipulateMode == ManipulationMode.SelectAndTransform
             && _id == m_selectId)
         {
-            _rot = Handles.RotationHandle(viewRot, pos);
+            if (m_handleSelectId == -1)
+            {
+                _rot = Handles.RotationHandle(viewRot, pos);
+            }
         }
     }
 
     private void DrawWaypointSelectHandles(int i)
     {
-        float size = HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.2f;
-        if (m_selectId != i && Event.current.button != 1)
+        float size = 0.2f;//HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.1f;
+        if (Event.current.button != 1)
         {
-            if (Handles.Button(Target.Points[i].Position, Quaternion.identity, size, size, Handles.CubeHandleCap))
+            Handles.color = m_visualSetting.inactivePathColor;
+
+            if (m_selectId != i || m_handleSelectId != 0)
             {
-                SelectIndex(i);
+                if (Handles.Button(Target.Points[i].GetHandle(0).Position, Quaternion.identity, size * 2, size * 2, Handles.SphereHandleCap))
+                {
+                    SelectIndex(i);
+                    SelectHandleIndex(0);
+                    Debug.Log("select " + m_selectId + " " + m_handleSelectId);
+                }
             }
+
+            if (m_selectId != i || m_handleSelectId != 1)
+            {
+                if (Handles.Button(Target.Points[i].GetHandle(1).Position, Quaternion.identity, size * 2, size * 2, Handles.SphereHandleCap))
+                {
+                    SelectIndex(i);
+                    SelectHandleIndex(1);
+                    Debug.Log("select " + m_selectId + " " + m_handleSelectId);
+                }
+            }
+
+            if (m_selectId != i || m_handleSelectId != -1)
+            {
+                if (Handles.Button(Target.Points[i].Position, Quaternion.identity, size * 5, size * 5, Handles.CubeHandleCap))
+                {
+                    SelectIndex(i);
+                    SelectHandleIndex(-1);
+                    Debug.Log("select " + m_selectId + " " + m_handleSelectId);
+                }
+            }
+
         }
     }
 
@@ -310,6 +357,8 @@ public class BezierCurveEditor : Editor
     {
         if (m_drawPathInEditor == false)
             return;
+
+        Handles.color = m_visualSetting.handleColor;
 
         EditorGUI.BeginChangeCheck();
         Vector3 pos = Target.Points[i].Position;
@@ -333,10 +382,19 @@ public class BezierCurveEditor : Editor
         if (EditorGUI.EndChangeCheck())
         {
             Undo.RegisterCompleteObjectUndo(Target, "Transformed waypoint");
-            Target.SetAnchorRotation(i, rot);
-            Target.SetAnchorPosition(i, pos);
-            //Target.Points[i].SetHandlePosition(0, pos_0);
-            //Target.Points[i].SetHandlePosition(1, pos_1);
+            if (m_selectId == i && m_handleSelectId == -1)
+            {
+                Target.SetAnchorRotation(i, rot);
+                Target.SetAnchorPosition(i, pos);
+            }
+            if (m_selectId == i && m_handleSelectId == 0)
+            {
+                Target.Points[i].SetHandlePosition(0, pos_0);
+            }
+            if (m_selectId == i && m_handleSelectId == 1)
+            {
+                Target.Points[i].SetHandlePosition(1, pos_1);
+            }
             Repaint();
         }
     }
