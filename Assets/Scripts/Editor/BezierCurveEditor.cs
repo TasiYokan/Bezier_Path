@@ -18,6 +18,7 @@ public class BezierCurveEditor : Editor
         public Color pathColor = Color.green;
         public Color inactivePathColor = Color.gray;
         public Color handleColor = Color.white;
+        public Color activeHandleColor = Color.yellow;
     }
 
     #region Editor Variable
@@ -314,39 +315,60 @@ public class BezierCurveEditor : Editor
 
     private void DrawWaypointSelectHandles(int i)
     {
-        float size = Mathf.Max(0.1f, HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.05f);
+        float size = HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.2f;
         if (Event.current.button != 1)
         {
-            Handles.color = m_visualSetting.inactivePathColor;
+            if (m_selectId != i || m_handleSelectId != -1)
+            {
+                Handles.color = m_visualSetting.handleColor;
+
+                if (Handles.Button(Target.Points[i].Position, Target.Points[i].Rotation, size * 1.5f, size * 1.5f, Handles.CubeHandleCap))
+                {
+                    SelectIndex(i);
+                    SelectHandleIndex(-1);
+                }
+            }
+            else
+            {
+                Handles.color = m_visualSetting.activeHandleColor;
+                //Handles.DrawWireCube( Target.Points[i].Position, Vector3.one * size * 5);
+                Handles.CubeHandleCap(0, Target.Points[i].Position, Target.Points[i].Rotation, size * 1.5f, Event.current.type);
+            }
+
+            // Force all its handles to be highlighted
+            if(m_handleSelectId == -1)
+                Handles.color = m_visualSetting.activeHandleColor;
 
             if (m_selectId != i || m_handleSelectId != 0)
             {
-                if (Handles.Button(Target.Points[i].GetHandle(0).Position, Quaternion.identity, size * 2, size * 2, Handles.SphereHandleCap))
+                Handles.color = m_visualSetting.handleColor;
+
+                if (Handles.Button(Target.Points[i].GetHandle(0).Position, Quaternion.identity, size, size, Handles.SphereHandleCap))
                 {
                     SelectIndex(i);
                     SelectHandleIndex(0);
-                    Debug.Log("select " + m_selectId + " " + m_handleSelectId);
                 }
+            }
+            else
+            {
+                Handles.color = m_visualSetting.activeHandleColor;
+                Handles.SphereHandleCap(0, Target.Points[i].GetHandle(0).Position, Quaternion.identity, size, Event.current.type);
             }
 
             if (m_selectId != i || m_handleSelectId != 1)
             {
-                if (Handles.Button(Target.Points[i].GetHandle(1).Position, Quaternion.identity, size * 2, size * 2, Handles.SphereHandleCap))
+                Handles.color = m_visualSetting.handleColor;
+
+                if (Handles.Button(Target.Points[i].GetHandle(1).Position, Quaternion.identity, size, size, Handles.SphereHandleCap))
                 {
                     SelectIndex(i);
                     SelectHandleIndex(1);
-                    Debug.Log("select " + m_selectId + " " + m_handleSelectId);
                 }
             }
-
-            if (m_selectId != i || m_handleSelectId != -1)
+            else
             {
-                if (Handles.Button(Target.Points[i].Position, Quaternion.identity, size * 5, size * 5, Handles.CubeHandleCap))
-                {
-                    SelectIndex(i);
-                    SelectHandleIndex(-1);
-                    Debug.Log("select " + m_selectId + " " + m_handleSelectId);
-                }
+                Handles.color = m_visualSetting.activeHandleColor;
+                Handles.SphereHandleCap(0, Target.Points[i].GetHandle(1).Position, Quaternion.identity, size, Event.current.type);
             }
 
         }
