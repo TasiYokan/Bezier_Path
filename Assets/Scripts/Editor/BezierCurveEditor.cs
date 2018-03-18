@@ -53,6 +53,8 @@ public class BezierCurveEditor : Editor
 
     private SerializedObject serializedTarget;
     private SerializedProperty isAutoConnectProperty;
+    private SerializedProperty totalSampleCountProperty;
+    private SerializedProperty drawDebugPathProperty;
 
     #endregion Serialized Properties
 
@@ -132,6 +134,12 @@ public class BezierCurveEditor : Editor
         }
 
         isAutoConnectProperty.boolValue = GUILayout.Toggle(isAutoConnectProperty.boolValue, "Connect first and last nodes?", GUILayout.Width(Screen.width));
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("Total Sample Count: ", GUILayout.Width(Screen.width / 2f));
+        totalSampleCountProperty.intValue = EditorGUILayout.IntField(totalSampleCountProperty.intValue);
+        GUILayout.EndHorizontal();
+        drawDebugPathProperty.boolValue = GUILayout.Toggle(drawDebugPathProperty.boolValue,
+            "Use LineRenderer to draw path in game?", GUILayout.Width(Screen.width));
 
         if (GUILayout.Button(addPointContent))
         {
@@ -256,21 +264,31 @@ public class BezierCurveEditor : Editor
 
         if (m_manipulateMode == ManipulationMode.Free)
         {
-            if (m_selectId == _id && m_handleSelectId == -1)
+            EditorGUI.BeginChangeCheck();
+            _pos = Handles.FreeMoveHandle(
+                pos, viewRot, size * 3, Vector3.zero, Handles.CubeHandleCap);
+            if (EditorGUI.EndChangeCheck())
             {
-                _pos = Handles.FreeMoveHandle(
-                    pos, viewRot, size * 3, Vector3.zero, Handles.CubeHandleCap);
+                m_handleSelectId = _id;
+                SelectHandleIndex(-1);
             }
 
-            if (m_selectId == _id && m_handleSelectId == 0)
+            EditorGUI.BeginChangeCheck();
+            _pos_0 = Handles.FreeMoveHandle(
+                _pos_0, viewRot, size, Vector3.zero, Handles.SphereHandleCap);
+            if (EditorGUI.EndChangeCheck())
             {
-                _pos_0 = Handles.FreeMoveHandle(
-                    _pos_0, viewRot, size, Vector3.zero, Handles.SphereHandleCap);
+                m_handleSelectId = _id;
+                SelectHandleIndex(0);
             }
-            if (m_selectId == _id && m_handleSelectId == 1)
+
+            EditorGUI.BeginChangeCheck();
+            _pos_1 = Handles.FreeMoveHandle(
+                _pos_1, viewRot, size, Vector3.zero, Handles.SphereHandleCap);
+            if (EditorGUI.EndChangeCheck())
             {
-                _pos_1 = Handles.FreeMoveHandle(
-                    _pos_1, viewRot, size, Vector3.zero, Handles.SphereHandleCap);
+                m_handleSelectId = _id;
+                SelectHandleIndex(1);
             }
         }
         else if (m_manipulateMode == ManipulationMode.SelectAndTransform
@@ -315,6 +333,9 @@ public class BezierCurveEditor : Editor
 
     private void DrawWaypointSelectHandles(int i)
     {
+        if (m_manipulateMode == ManipulationMode.Free)
+            return;
+
         float size = HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.2f;
         if (Event.current.button != 1)
         {
@@ -336,7 +357,7 @@ public class BezierCurveEditor : Editor
             }
 
             // Force all its handles to be highlighted
-            if(m_handleSelectId == -1)
+            if (m_handleSelectId == -1)
                 Handles.color = m_visualSetting.activeHandleColor;
 
             if (m_selectId != i || m_handleSelectId != 0)
@@ -379,6 +400,9 @@ public class BezierCurveEditor : Editor
         if (m_drawPathInEditor == false)
             return;
 
+        if (m_manipulateMode == ManipulationMode.SelectAndTransform && i != m_selectId)
+            return;
+
         Handles.color = m_visualSetting.handleColor;
 
         EditorGUI.BeginChangeCheck();
@@ -403,16 +427,16 @@ public class BezierCurveEditor : Editor
         if (EditorGUI.EndChangeCheck())
         {
             Undo.RegisterCompleteObjectUndo(Target, "Transformed waypoint");
-            if (m_selectId == i && m_handleSelectId == -1)
+            if (m_handleSelectId == -1)
             {
                 Target.SetAnchorRotation(i, rot);
                 Target.SetAnchorPosition(i, pos);
             }
-            if (m_selectId == i && m_handleSelectId == 0)
+            else if (m_handleSelectId == 0)
             {
                 Target.Points[i].SetHandlePosition(0, pos_0);
             }
-            if (m_selectId == i && m_handleSelectId == 1)
+            else if (m_handleSelectId == 1)
             {
                 Target.Points[i].SetHandlePosition(1, pos_1);
             }
@@ -425,5 +449,7 @@ public class BezierCurveEditor : Editor
     {
         serializedTarget = new SerializedObject(Target);
         isAutoConnectProperty = serializedTarget.FindProperty("isAutoConnect");
+        totalSampleCountProperty = serializedTarget.FindProperty("totalSampleCount");
+        drawDebugPathProperty = serializedTarget.FindProperty("drawDebugPath");
     }
 }
