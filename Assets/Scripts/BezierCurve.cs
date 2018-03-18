@@ -43,6 +43,7 @@ public class BezierCurve : MonoBehaviour
     public void AddPoint(BezierPoint _point)
     {
         m_points.Add(_point);
+        UpdateAnchorTransform(m_points.Count - 1);
         InitFragmentsFromPoints();
     }
 
@@ -89,9 +90,14 @@ public class BezierCurve : MonoBehaviour
     {
         for (int i = 0; i < Points.Count; ++i)
         {
-            SetAnchorLocalRotation(i, Points[i].LocalRotation);
-            SetAnchorLocalPosition(i, Points[i].LocalPosition);
+            UpdateAnchorTransform(i);
         }
+    }
+
+    public void UpdateAnchorTransform(int _id)
+    {
+        SetAnchorLocalRotation(_id, Points[_id].LocalRotation);
+        SetAnchorLocalPosition(_id, Points[_id].LocalPosition);
     }
 
     public void SetAnchorPosition(int _id, Vector3 _position)

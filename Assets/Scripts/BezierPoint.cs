@@ -96,8 +96,8 @@ public class BezierPoint
         if (_isFirstTime == false)
             return;
         
-        m_position = Vector3.zero;
-        m_rotation = Quaternion.identity;
+        m_localPosition = Vector3.zero;
+        m_localRotation = Quaternion.identity;
 
         m_handles[0] = new BezierHandle();
         m_handles[1] = new BezierHandle();

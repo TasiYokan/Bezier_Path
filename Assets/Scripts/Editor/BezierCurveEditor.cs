@@ -209,11 +209,10 @@ public class BezierCurveEditor : Editor
 
     private void DrawBezierCurve()
     {
-        if (m_drawPathInEditor == false)
+        if (m_drawPathInEditor == false || Target.Points == null)
             return;
 
-        if (Target.Points != null)
-            Target.UpdateAnchorsTransform();
+        Target.UpdateAnchorsTransform();
 
         if (Target.Points.Count >= 2)
         {
@@ -250,7 +249,7 @@ public class BezierCurveEditor : Editor
     private void CreateMoveHandle(int _id, ref Vector3 _pos, ref Vector3 _pos_0, ref Vector3 _pos_1)
     {
         Vector3 pos = Target.Points[_id].Position;
-        float size = 0.2f;//HandleUtility.GetHandleSize(pos) * 0.1f;
+        float size = Mathf.Max(0.1f, HandleUtility.GetHandleSize(Target.Points[_id].Position) * 0.05f);
         Quaternion viewRot = (Tools.pivotRotation == PivotRotation.Local)
             ? Target.Points[_id].Rotation : Quaternion.identity;
 
@@ -295,7 +294,7 @@ public class BezierCurveEditor : Editor
     private void CreateRotateHandle(int _id, ref Quaternion _rot)
     {
         Vector3 pos = Target.Points[_id].Position;
-        float size = 0.2f;//HandleUtility.GetHandleSize(pos) * 0.1f;
+        float size = Mathf.Max(0.1f, HandleUtility.GetHandleSize(Target.Points[_id].Position) * 0.05f);
         Quaternion viewRot = (Tools.pivotRotation == PivotRotation.Local)
             ? Target.Points[_id].Rotation : Quaternion.identity;
 
@@ -315,7 +314,7 @@ public class BezierCurveEditor : Editor
 
     private void DrawWaypointSelectHandles(int i)
     {
-        float size = 0.2f;//HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.1f;
+        float size = Mathf.Max(0.1f, HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.05f);
         if (Event.current.button != 1)
         {
             Handles.color = m_visualSetting.inactivePathColor;
