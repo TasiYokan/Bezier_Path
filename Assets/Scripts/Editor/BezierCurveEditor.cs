@@ -35,8 +35,8 @@ public class BezierCurveEditor : Editor
     }
     private ManipulationMode m_manipulateMode;
     private VisualSetting m_visualSetting;
-    private int m_selectId = -1;
-    private int m_handleSelectId = -1;
+    private int m_selectedId = -1;
+    private int m_selectedHandleId = -1;
     private bool m_drawPathInEditor = true;
 
     #endregion Editor Variable
@@ -44,7 +44,8 @@ public class BezierCurveEditor : Editor
     #region Editor GUIs
 
     private GUIContent addPointContent = new GUIContent("Add WayPoint", "Add a BezierPoint");
-    private GUIContent deletePointContent = new GUIContent("X", "Deletes this BezierPoint");
+    private GUIContent deletePointContent = new GUIContent("Delete", "Deletes this BezierPoint");
+    private GUIContent gotoPointContent = new GUIContent("Goto", "Select this BezierPoint");
     private GUIContent clearAllPointsContent = new GUIContent("Clear All", "Delete all BezierPoint");
 
     #endregion Editor GUIs
@@ -172,13 +173,13 @@ public class BezierCurveEditor : Editor
         EditorGUI.BeginChangeCheck();
         GUILayout.BeginVertical("Box");
         Vector3 pos = EditorGUILayout.Vector3Field("Anchor Pos",
-            Target.Points[_pointId].LocalPosition);
+            Target.Points[_pointId].LocalPosition, GUILayout.MinWidth(300));
         Vector3 rotInEuler = EditorGUILayout.Vector3Field("Anchor Rot",
-            Target.Points[_pointId].LocalRotation.eulerAngles);
+            Target.Points[_pointId].LocalRotation.eulerAngles, GUILayout.MinWidth(300));
         Vector3 pos_0 = EditorGUILayout.Vector3Field("Handle 1th",
-            Target.Points[_pointId].GetHandle(0).LocalPosition);
+            Target.Points[_pointId].GetHandle(0).LocalPosition, GUILayout.MinWidth(300));
         Vector3 pos_1 = EditorGUILayout.Vector3Field("Handle 2rd",
-            Target.Points[_pointId].GetHandle(1).LocalPosition);
+            Target.Points[_pointId].GetHandle(1).LocalPosition, GUILayout.MinWidth(300));
         GUILayout.EndVertical();
         if (EditorGUI.EndChangeCheck())
         {
@@ -190,12 +191,23 @@ public class BezierCurveEditor : Editor
             SceneView.RepaintAll();
         }
 
+        GUILayout.BeginVertical();
         if (GUILayout.Button(deletePointContent))
         {
             Undo.RecordObject(Target, "Deleted a waypoint");
             Target.RemovePoint(Target.Points[_pointId]);
             SceneView.RepaintAll();
         }
+        if (GUILayout.Button(gotoPointContent))
+        {
+            Debug.Log("Goto " + _pointId);
+            m_selectedId = _pointId;
+            m_selectedHandleId = -1;
+            SceneView.lastActiveSceneView.pivot = Target.Points[_pointId].Position;
+            SceneView.lastActiveSceneView.size = 3;
+            SceneView.lastActiveSceneView.Repaint();
+        }
+        GUILayout.EndVertical();
 
         GUILayout.EndHorizontal();
 
@@ -206,13 +218,13 @@ public class BezierCurveEditor : Editor
 
     void SelectIndex(int _id)
     {
-        m_selectId = _id;
+        m_selectedId = _id;
         Repaint();
     }
 
     void SelectHandleIndex(int _id)
     {
-        m_handleSelectId = _id;
+        m_selectedHandleId = _id;
         Repaint();
     }
 
@@ -269,7 +281,7 @@ public class BezierCurveEditor : Editor
                 pos, viewRot, size * 3, Vector3.zero, Handles.CubeHandleCap);
             if (EditorGUI.EndChangeCheck())
             {
-                m_handleSelectId = _id;
+                m_selectedHandleId = _id;
                 SelectHandleIndex(-1);
             }
 
@@ -278,7 +290,7 @@ public class BezierCurveEditor : Editor
                 _pos_0, viewRot, size, Vector3.zero, Handles.SphereHandleCap);
             if (EditorGUI.EndChangeCheck())
             {
-                m_handleSelectId = _id;
+                m_selectedHandleId = _id;
                 SelectHandleIndex(0);
             }
 
@@ -287,23 +299,23 @@ public class BezierCurveEditor : Editor
                 _pos_1, viewRot, size, Vector3.zero, Handles.SphereHandleCap);
             if (EditorGUI.EndChangeCheck())
             {
-                m_handleSelectId = _id;
+                m_selectedHandleId = _id;
                 SelectHandleIndex(1);
             }
         }
         else if (m_manipulateMode == ManipulationMode.SelectAndTransform
-            && _id == m_selectId)
+            && _id == m_selectedId)
         {
-            if (m_handleSelectId == -1)
+            if (m_selectedHandleId == -1)
             {
                 _pos = Handles.PositionHandle(pos, viewRot);
             }
 
-            if (m_handleSelectId == 0)
+            if (m_selectedHandleId == 0)
             {
                 _pos_0 = Handles.PositionHandle(_pos_0, viewRot);
             }
-            if (m_handleSelectId == 1)
+            if (m_selectedHandleId == 1)
             {
                 _pos_1 = Handles.PositionHandle(_pos_1, viewRot);
             }
@@ -322,9 +334,9 @@ public class BezierCurveEditor : Editor
             _rot = Handles.FreeRotateHandle(viewRot, pos, size * 4);
         }
         else if (m_manipulateMode == ManipulationMode.SelectAndTransform
-            && _id == m_selectId)
+            && _id == m_selectedId)
         {
-            if (m_handleSelectId == -1)
+            if (m_selectedHandleId == -1)
             {
                 _rot = Handles.RotationHandle(viewRot, pos);
             }
@@ -339,7 +351,7 @@ public class BezierCurveEditor : Editor
         float size = HandleUtility.GetHandleSize(Target.Points[i].Position) * 0.2f;
         if (Event.current.button != 1)
         {
-            if (m_selectId != i || m_handleSelectId != -1)
+            if (m_selectedId != i || m_selectedHandleId != -1)
             {
                 Handles.color = m_visualSetting.handleColor;
 
@@ -357,10 +369,10 @@ public class BezierCurveEditor : Editor
             }
 
             // Force all its handles to be highlighted
-            if (m_handleSelectId == -1)
+            if (m_selectedHandleId == -1)
                 Handles.color = m_visualSetting.activeHandleColor;
 
-            if (m_selectId != i || m_handleSelectId != 0)
+            if (m_selectedId != i || m_selectedHandleId != 0)
             {
                 Handles.color = m_visualSetting.handleColor;
 
@@ -376,7 +388,7 @@ public class BezierCurveEditor : Editor
                 Handles.SphereHandleCap(0, Target.Points[i].GetHandle(0).Position, Quaternion.identity, size, Event.current.type);
             }
 
-            if (m_selectId != i || m_handleSelectId != 1)
+            if (m_selectedId != i || m_selectedHandleId != 1)
             {
                 Handles.color = m_visualSetting.handleColor;
 
@@ -400,7 +412,7 @@ public class BezierCurveEditor : Editor
         if (m_drawPathInEditor == false)
             return;
 
-        if (m_manipulateMode == ManipulationMode.SelectAndTransform && i != m_selectId)
+        if (m_manipulateMode == ManipulationMode.SelectAndTransform && i != m_selectedId)
             return;
 
         Handles.color = m_visualSetting.handleColor;
@@ -427,16 +439,16 @@ public class BezierCurveEditor : Editor
         if (EditorGUI.EndChangeCheck())
         {
             Undo.RegisterCompleteObjectUndo(Target, "Transformed waypoint");
-            if (m_handleSelectId == -1)
+            if (m_selectedHandleId == -1)
             {
                 Target.SetAnchorRotation(i, rot);
                 Target.SetAnchorPosition(i, pos);
             }
-            else if (m_handleSelectId == 0)
+            else if (m_selectedHandleId == 0)
             {
                 Target.Points[i].SetHandlePosition(0, pos_0);
             }
-            else if (m_handleSelectId == 1)
+            else if (m_selectedHandleId == 1)
             {
                 Target.Points[i].SetHandlePosition(1, pos_1);
             }
