@@ -91,13 +91,13 @@ public class BezierPoint
     /// Only used when click add point button or create one in game.
     /// </summary>
     /// <param name="_isFirstTime"></param>
-    public BezierPoint(bool _isFirstTime)
+    public BezierPoint(Vector3 _pos, Quaternion _rot, bool _isFirstTime = true)
     {
         if (_isFirstTime == false)
             return;
-        
-        m_localPosition = Vector3.zero;
-        m_localRotation = Quaternion.identity;
+
+        m_localPosition = _pos;
+        m_localRotation = _rot;
 
         m_handles[0] = new BezierHandle();
         m_handles[1] = new BezierHandle();

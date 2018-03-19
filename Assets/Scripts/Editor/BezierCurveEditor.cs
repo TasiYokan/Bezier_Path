@@ -144,7 +144,10 @@ public class BezierCurveEditor : Editor
 
         if (GUILayout.Button(addPointContent))
         {
-            BezierPoint point = new BezierPoint(true);
+            BezierPoint point = new BezierPoint(
+                SceneView.lastActiveSceneView.camera.transform.position + SceneView.lastActiveSceneView.camera.transform.forward * 3f,
+                Quaternion.identity,
+                true);
             Target.AddPoint(point);
         }
 
