@@ -103,13 +103,19 @@ public class BezierCurve : MonoBehaviour
     public void SetAnchorPosition(int _id, Vector3 _position)
     {
         Points[_id].Position = _position;
-        Points[_id].LocalPosition = Quaternion.Inverse(transform.rotation) * (_position - transform.position);
+        Points[_id].LocalPosition = 
+            Vector3.Scale(transform.localScale.Reciprocal(),
+            Quaternion.Inverse(transform.rotation)
+            * (_position - transform.position));
     }
 
     public void SetAnchorLocalPosition(int _id, Vector3 _localPosition)
     {
         Points[_id].LocalPosition = _localPosition;
-        Points[_id].Position = transform.rotation * _localPosition + transform.position;
+        Points[_id].Position =
+            transform.position
+            + transform.rotation 
+            * Vector3.Scale(transform.localScale , _localPosition);
     }
 
     public void SetAnchorRotation(int _id, Quaternion _rotation)
