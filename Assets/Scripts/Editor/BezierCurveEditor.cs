@@ -45,6 +45,7 @@ public class BezierCurveEditor : Editor
 
     private GUIContent addPointContent = new GUIContent("Add WayPoint", "Add a BezierPoint");
     private GUIContent deletePointContent = new GUIContent("Delete", "Deletes this BezierPoint");
+    private GUIContent resetPointContent = new GUIContent("Reset", "Select this BezierPoint");
     private GUIContent gotoPointContent = new GUIContent("Goto", "Select this BezierPoint");
     private GUIContent clearAllPointsContent = new GUIContent("Clear All", "Delete all BezierPoint");
 
@@ -200,6 +201,14 @@ public class BezierCurveEditor : Editor
             Undo.RecordObject(Target, "Deleted a waypoint");
             Target.RemovePoint(Target.Points[_pointId]);
             SceneView.RepaintAll();
+        }
+        if(GUILayout.Button(resetPointContent))
+        {
+            Undo.RecordObject(Target, "Reset a waypoint");
+            Target.SetAnchorLocalPosition(_pointId, Vector3.zero);
+            Target.SetAnchorLocalRotation(_pointId, Quaternion.identity);
+            Target.Points[_pointId].SetHandleLocalPosition(0, Vector3.zero);
+            Target.Points[_pointId].SetHandleLocalPosition(1, Vector3.zero);
         }
         if (GUILayout.Button(gotoPointContent))
         {
