@@ -97,9 +97,9 @@ public class BezierPathMover : MonoBehaviour
             transform.position =
                 bezierPath.Fragments[m_curFragId].SamplePos[m_curSampleId] + m_offset;
 
-            //transform.forward = bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn());
+            //transform.forward = bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speedInSecond.Sgn());
             //transform.LookAt(bezierPath.GetNextSamplePosAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn()));
-            transform.forward = Vector3.Lerp(transform.forward, bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speedInSecond.Sgn()), Time.deltaTime);
+            transform.forward = Vector3.Lerp(transform.forward, bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speedInSecond.Sgn()), speedInSecond * 10 * Time.deltaTime);
 
             Vector3 rotInEuler = transform.rotation.eulerAngles;
             rotInEuler = new Vector3(
@@ -116,5 +116,10 @@ public class BezierPathMover : MonoBehaviour
 
             yield return null;
         }
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawLine(transform.position, transform.forward * 10);
     }
 }
