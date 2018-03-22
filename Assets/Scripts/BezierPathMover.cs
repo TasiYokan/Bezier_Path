@@ -117,9 +117,4 @@ public class BezierPathMover : MonoBehaviour
             yield return null;
         }
     }
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.DrawLine(transform.position, transform.forward * 10);
-    }
 }

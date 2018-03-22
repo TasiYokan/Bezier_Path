@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 
 
@@ -38,6 +39,7 @@ public class BezierCurveEditor : Editor
     private int m_selectedId = -1;
     private int m_selectedHandleId = -1;
     private bool m_drawPathInEditor = true;
+    private ReorderableList m_reorderablePointsList;
 
     #endregion Editor Variable
 
@@ -69,6 +71,7 @@ public class BezierCurveEditor : Editor
 
         SetupEditorVariables();
         GetTargetProperties();
+        InitReorderableList();
     }
 
     void OnDisable()
@@ -80,7 +83,8 @@ public class BezierCurveEditor : Editor
     {
         serializedTarget.Update();
         DrawButtons();
-        DrawRawPointsValue();
+        //DrawRawPointsValue();
+        m_reorderablePointsList.DoLayoutList();
         serializedTarget.ApplyModifiedProperties();
     }
 
@@ -161,6 +165,83 @@ public class BezierCurveEditor : Editor
         GUILayout.Space(10);
     }
 
+    void InitReorderableList()
+    {
+        Debug.Log("InitReorderableList");
+        m_reorderablePointsList = new ReorderableList(serializedObject, serializedObject.FindProperty("Points"), true, true, false, false);
+
+        float singleLine = EditorGUIUtility.singleLineHeight;
+        m_reorderablePointsList.elementHeight = singleLine * 8f;
+
+        m_reorderablePointsList.drawElementCallback = (rect, index, active, focused) =>
+        {
+            if (index > Target.Points.Count - 1)
+                return;
+
+            EditorGUI.BeginChangeCheck();
+            //GUILayout.BeginVertical("Box");
+            Vector3 pos = EditorGUI.Vector3Field(rect, "Anchor Pos",
+                Target.Points[index].LocalPosition);
+            rect.y += singleLine * 2;
+
+            Vector3 rotInEuler = EditorGUI.Vector3Field(rect, "Anchor Rot",
+                Target.Points[index].LocalRotation.eulerAngles);
+            rect.y += singleLine * 2;
+
+            Vector3 pos_0 = EditorGUI.Vector3Field(rect, "Handle 1th",
+                Target.Points[index].GetHandle(0).LocalPosition);
+            rect.y += singleLine * 2;
+
+            Vector3 pos_1 = EditorGUI.Vector3Field(rect, "Handle 2rd",
+                Target.Points[index].GetHandle(1).LocalPosition);
+            rect.y += singleLine * 2;
+
+            //GUILayout.EndVertical();
+            if (EditorGUI.EndChangeCheck())
+            {
+                Undo.RecordObject(Target, "Changed handle transform");
+                Target.SetAnchorLocalRotation(index, Quaternion.Euler(rotInEuler));
+                Target.SetAnchorLocalPosition(index, pos);
+                Target.Points[index].SetHandleLocalPosition(0, pos_0);
+                Target.Points[index].SetHandleLocalPosition(1, pos_1);
+                SceneView.RepaintAll();
+            }
+
+
+
+            //GUILayout.BeginVertical();
+            //if (GUILayout.Button(deletePointContent))
+            //{
+            //    Undo.RecordObject(Target, "Deleted a waypoint");
+            //    Target.RemovePoint(Target.Points[m_reorderablePointsList.index]);
+            //    SceneView.RepaintAll();
+            //}
+            //if (GUILayout.Button(resetPointContent))
+            //{
+            //    Undo.RecordObject(Target, "Reset a waypoint");
+            //    Target.SetAnchorLocalPosition(m_reorderablePointsList.index, Vector3.zero);
+            //    Target.SetAnchorLocalRotation(m_reorderablePointsList.index, Quaternion.identity);
+            //    Target.Points[m_reorderablePointsList.index].SetHandleLocalPosition(0, Vector3.zero);
+            //    Target.Points[m_reorderablePointsList.index].SetHandleLocalPosition(1, Vector3.zero);
+            //}
+            //if (GUILayout.Button(gotoPointContent))
+            //{
+            //    Debug.Log("Goto " + m_reorderablePointsList.index);
+            //    m_selectedId = m_reorderablePointsList.index;
+            //    m_selectedHandleId = -1;
+            //    SceneView.lastActiveSceneView.pivot = Target.Points[m_reorderablePointsList.index].Position;
+            //    SceneView.lastActiveSceneView.size = 3;
+            //    SceneView.lastActiveSceneView.Repaint();
+            //}
+            //GUILayout.EndVertical();
+        };
+
+        m_reorderablePointsList.onSelectCallback = l =>
+        {
+            SelectHandleIndex(l.index);
+        };
+    }
+
     private void DrawRawPointsValue()
     {
         //foreach (BezierPoint point in Target.Points)
@@ -195,31 +276,31 @@ public class BezierCurveEditor : Editor
             SceneView.RepaintAll();
         }
 
-        GUILayout.BeginVertical();
-        if (GUILayout.Button(deletePointContent))
-        {
-            Undo.RecordObject(Target, "Deleted a waypoint");
-            Target.RemovePoint(Target.Points[_pointId]);
-            SceneView.RepaintAll();
-        }
-        if(GUILayout.Button(resetPointContent))
-        {
-            Undo.RecordObject(Target, "Reset a waypoint");
-            Target.SetAnchorLocalPosition(_pointId, Vector3.zero);
-            Target.SetAnchorLocalRotation(_pointId, Quaternion.identity);
-            Target.Points[_pointId].SetHandleLocalPosition(0, Vector3.zero);
-            Target.Points[_pointId].SetHandleLocalPosition(1, Vector3.zero);
-        }
-        if (GUILayout.Button(gotoPointContent))
-        {
-            Debug.Log("Goto " + _pointId);
-            m_selectedId = _pointId;
-            m_selectedHandleId = -1;
-            SceneView.lastActiveSceneView.pivot = Target.Points[_pointId].Position;
-            SceneView.lastActiveSceneView.size = 3;
-            SceneView.lastActiveSceneView.Repaint();
-        }
-        GUILayout.EndVertical();
+        //GUILayout.BeginVertical();
+        //if (GUILayout.Button(deletePointContent))
+        //{
+        //    Undo.RecordObject(Target, "Deleted a waypoint");
+        //    Target.RemovePoint(Target.Points[_pointId]);
+        //    SceneView.RepaintAll();
+        //}
+        //if (GUILayout.Button(resetPointContent))
+        //{
+        //    Undo.RecordObject(Target, "Reset a waypoint");
+        //    Target.SetAnchorLocalPosition(_pointId, Vector3.zero);
+        //    Target.SetAnchorLocalRotation(_pointId, Quaternion.identity);
+        //    Target.Points[_pointId].SetHandleLocalPosition(0, Vector3.zero);
+        //    Target.Points[_pointId].SetHandleLocalPosition(1, Vector3.zero);
+        //}
+        //if (GUILayout.Button(gotoPointContent))
+        //{
+        //    Debug.Log("Goto " + _pointId);
+        //    m_selectedId = _pointId;
+        //    m_selectedHandleId = -1;
+        //    SceneView.lastActiveSceneView.pivot = Target.Points[_pointId].Position;
+        //    SceneView.lastActiveSceneView.size = 3;
+        //    SceneView.lastActiveSceneView.Repaint();
+        //}
+        //GUILayout.EndVertical();
 
         GUILayout.EndHorizontal();
 

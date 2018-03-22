@@ -4,8 +4,7 @@ using System.Collections.Generic;
 
 public class BezierCurve : MonoBehaviour
 {
-    [SerializeField]
-    private List<BezierPoint> m_points;
+    public List<BezierPoint> Points;
     private List<BezierFragment> m_fragments;
 
     public bool isAutoConnect;
@@ -25,14 +24,6 @@ public class BezierCurve : MonoBehaviour
         }
     }
 
-    public List<BezierPoint> Points
-    {
-        get
-        {
-            return m_points;
-        }
-    }
-
     void Awake()
     {
         m_lineRenderer = GetComponent<LineRenderer>();
@@ -42,28 +33,28 @@ public class BezierCurve : MonoBehaviour
 
     public void AddPoint(BezierPoint _point)
     {
-        m_points.Add(_point);
-        UpdateAnchorTransform(m_points.Count - 1);
+        Points.Add(_point);
+        UpdateAnchorTransform(Points.Count - 1);
         InitFragmentsFromPoints();
     }
 
     public void RemovePoint(BezierPoint _point)
     {
-        m_points.Remove(_point);
+        Points.Remove(_point);
         InitFragmentsFromPoints();
     }
 
     private void InitFragmentsFromPoints()
     {
         m_fragments = new List<BezierFragment>();
-        for (int i = 0; i < m_points.Count - 1; i++)
+        for (int i = 0; i < Points.Count - 1; i++)
         {
-            m_fragments.Add(new BezierFragment(m_points[i], m_points[i + 1], totalSampleCount / m_points.Count));
+            m_fragments.Add(new BezierFragment(Points[i], Points[i + 1], totalSampleCount / Points.Count));
         }
 
-        if (isAutoConnect && m_points.Count > 1)
+        if (isAutoConnect && Points.Count > 1)
         {
-            m_fragments.Add(new BezierFragment(m_points[m_points.Count - 1], m_points[0], totalSampleCount / m_points.Count));
+            m_fragments.Add(new BezierFragment(Points[Points.Count - 1], Points[0], totalSampleCount / Points.Count));
         }
 
         totalLength = 0;
@@ -273,7 +264,7 @@ public class BezierCurve : MonoBehaviour
 
     public void UpdateAllPointPoses()
     {
-        foreach (BezierPoint point in m_points)
+        foreach (BezierPoint point in Points)
         {
             point.UpdatePosition();
         }
