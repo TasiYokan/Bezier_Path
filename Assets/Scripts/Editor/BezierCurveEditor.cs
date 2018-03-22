@@ -171,14 +171,48 @@ public class BezierCurveEditor : Editor
         m_reorderablePointsList = new ReorderableList(serializedObject, serializedObject.FindProperty("Points"), true, true, false, false);
 
         float singleLine = EditorGUIUtility.singleLineHeight;
-        m_reorderablePointsList.elementHeight = singleLine * 8f;
+        m_reorderablePointsList.elementHeight = singleLine * 10f;
 
         m_reorderablePointsList.drawElementCallback = (rect, index, active, focused) =>
         {
             if (index > Target.Points.Count - 1)
                 return;
+            float startWidth = rect.width;
 
             EditorGUI.BeginChangeCheck();
+            rect.x = 50;
+            rect.height = singleLine;
+            rect.width = startWidth * 0.25f;
+            if (GUI.Button(rect, deletePointContent))
+            {
+                Undo.RecordObject(Target, "Deleted a waypoint");
+                Target.RemovePoint(Target.Points[index]);
+                SceneView.RepaintAll();
+            }
+            rect.x += startWidth * 0.25f;
+            if (GUI.Button(rect, resetPointContent))
+            {
+                Undo.RecordObject(Target, "Reset a waypoint");
+                Target.SetAnchorLocalPosition(index, Vector3.zero);
+                Target.SetAnchorLocalRotation(index, Quaternion.identity);
+                Target.Points[index].SetHandleLocalPosition(0, Vector3.zero);
+                Target.Points[index].SetHandleLocalPosition(1, Vector3.zero);
+            }
+            rect.x += startWidth * 0.25f;
+            if (GUI.Button(rect, gotoPointContent))
+            {
+                Debug.Log("Goto " + index);
+                m_selectedId = index;
+                m_selectedHandleId = -1;
+                SceneView.lastActiveSceneView.pivot = Target.Points[index].Position;
+                SceneView.lastActiveSceneView.size = 3;
+                SceneView.lastActiveSceneView.Repaint();
+            }
+            rect.y += singleLine + 10;
+
+            rect.width = startWidth - 50;
+            rect.x = 50;
+
             //GUILayout.BeginVertical("Box");
             Vector3 pos = EditorGUI.Vector3Field(rect, "Anchor Pos",
                 Target.Points[index].LocalPosition);
