@@ -183,6 +183,9 @@ public class BezierCurveEditor : Editor
         float singleLine = EditorGUIUtility.singleLineHeight;
         m_reorderablePointsList.elementHeight *= 5;// singleLine * 10f;
 
+
+        bool showTransform = true;
+
         m_reorderablePointsList.drawElementCallback = (rect, index, active, focused) =>
         {
             if (index > Target.Points.Count - 1)
@@ -226,41 +229,87 @@ public class BezierCurveEditor : Editor
             rect.width = startWidth;
             rect.x = startX;
 
-
-
-            bool foldout = active;
-            float height = EditorGUIUtility.singleLineHeight * 1.25f;
-            if (foldout)
+            
+            float height = EditorGUIUtility.singleLineHeight * 2.5f;
+            if (active)
             {
-                height = EditorGUIUtility.singleLineHeight * 6;
+                showTransform = true;
 
-                EditorGUI.BeginChangeCheck();
-                //GUILayout.BeginVertical("Box");
-                Vector3 pos = EditorGUI.Vector3Field(rect, "Anchor Pos",
-                    Target.Points[index].LocalPosition);
-                rect.y += singleLine * 1;
-
-                Vector3 rotInEuler = EditorGUI.Vector3Field(rect, "Anchor Rot",
-                    Target.Points[index].LocalRotation.eulerAngles);
-                rect.y += singleLine * 1;
-
-                Vector3 pos_0 = EditorGUI.Vector3Field(rect, "Handle 1th",
-                    Target.Points[index].GetHandle(0).LocalPosition);
-                rect.y += singleLine * 1;
-
-                Vector3 pos_1 = EditorGUI.Vector3Field(rect, "Handle 2rd",
-                    Target.Points[index].GetHandle(1).LocalPosition);
-                rect.y += singleLine * 1;
-
-                //GUILayout.EndVertical();
-                if (EditorGUI.EndChangeCheck())
+                rect.y -= EditorGUIUtility.singleLineHeight * 0.25f;
+                showTransform= EditorGUI.Foldout(rect, showTransform, "transform", true, EditorStyles.foldout);
+                if (showTransform)
                 {
-                    Undo.RecordObject(Target, "Changed handle transform");
-                    Target.SetAnchorLocalRotation(index, Quaternion.Euler(rotInEuler));
-                    Target.SetAnchorLocalPosition(index, pos);
-                    Target.Points[index].SetHandleLocalPosition(0, pos_0);
-                    Target.Points[index].SetHandleLocalPosition(1, pos_1);
-                    SceneView.RepaintAll();
+                    rect.y += EditorGUIUtility.singleLineHeight;
+                    height = EditorGUIUtility.singleLineHeight * 7;
+
+                    EditorGUI.BeginChangeCheck();
+                    //GUILayout.BeginVertical("Box");
+                    Vector3 pos = EditorGUI.Vector3Field(rect, "Anchor Pos",
+                        Target.Points[index].LocalPosition);
+                    rect.y += singleLine * 1;
+
+                    Vector3 rotInEuler = EditorGUI.Vector3Field(rect, "Anchor Rot",
+                        Target.Points[index].LocalRotation.eulerAngles);
+                    rect.y += singleLine * 1;
+
+                    Vector3 pos_0 = EditorGUI.Vector3Field(rect, "Handle 1th",
+                        Target.Points[index].GetHandle(0).LocalPosition);
+                    rect.y += singleLine * 1;
+
+                    Vector3 pos_1 = EditorGUI.Vector3Field(rect, "Handle 2rd",
+                        Target.Points[index].GetHandle(1).LocalPosition);
+                    rect.y += singleLine * 1;
+
+                    //GUILayout.EndVertical();
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        Undo.RecordObject(Target, "Changed handle transform");
+                        Target.SetAnchorLocalRotation(index, Quaternion.Euler(rotInEuler));
+                        Target.SetAnchorLocalPosition(index, pos);
+                        Target.Points[index].SetHandleLocalPosition(0, pos_0);
+                        Target.Points[index].SetHandleLocalPosition(1, pos_1);
+                        SceneView.RepaintAll();
+                    }
+                }
+            }
+            else
+            {
+
+                rect.y -= EditorGUIUtility.singleLineHeight * 0.25f;
+                showTransform = EditorGUI.Foldout(rect, showTransform, "transform", true, EditorStyles.foldout);
+                if (showTransform)
+                {
+                    rect.y += EditorGUIUtility.singleLineHeight;
+                    height = EditorGUIUtility.singleLineHeight * 7;
+
+                    EditorGUI.BeginChangeCheck();
+                    //GUILayout.BeginVertical("Box");
+                    Vector3 pos = EditorGUI.Vector3Field(rect, "Anchor Pos",
+                        Target.Points[index].LocalPosition);
+                    rect.y += singleLine * 1;
+
+                    Vector3 rotInEuler = EditorGUI.Vector3Field(rect, "Anchor Rot",
+                        Target.Points[index].LocalRotation.eulerAngles);
+                    rect.y += singleLine * 1;
+
+                    Vector3 pos_0 = EditorGUI.Vector3Field(rect, "Handle 1th",
+                        Target.Points[index].GetHandle(0).LocalPosition);
+                    rect.y += singleLine * 1;
+
+                    Vector3 pos_1 = EditorGUI.Vector3Field(rect, "Handle 2rd",
+                        Target.Points[index].GetHandle(1).LocalPosition);
+                    rect.y += singleLine * 1;
+
+                    //GUILayout.EndVertical();
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        Undo.RecordObject(Target, "Changed handle transform");
+                        Target.SetAnchorLocalRotation(index, Quaternion.Euler(rotInEuler));
+                        Target.SetAnchorLocalPosition(index, pos);
+                        Target.Points[index].SetHandleLocalPosition(0, pos_0);
+                        Target.Points[index].SetHandleLocalPosition(1, pos_1);
+                        SceneView.RepaintAll();
+                    }
                 }
             }
 
@@ -306,6 +355,7 @@ public class BezierCurveEditor : Editor
 
         m_reorderablePointsList.onSelectCallback = list =>
         {
+            showTransform = true;
             //Debug.Log("Select " + list.index);
             m_selectedId = list.index;
             m_selectedHandleId = -1;
