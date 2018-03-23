@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -172,7 +174,11 @@ public class BezierCurveEditor : Editor
     void InitReorderableList()
     {
         Debug.Log("InitReorderableList");
-        m_reorderablePointsList = new ReorderableList(serializedObject, serializedObject.FindProperty("Points"), true, true, false, false);
+        //m_reorderablePointsList = CreateList(serializedObject, serializedObject.FindProperty("Points"));
+        SerializedProperty prop = serializedObject.FindProperty("Points");
+        m_reorderablePointsList = new ReorderableList(serializedObject, prop, true, true, false, false);
+
+        List<float> heights = new List<float>(prop.arraySize);
 
         float singleLine = EditorGUIUtility.singleLineHeight;
         m_reorderablePointsList.elementHeight *= 5;// singleLine * 10f;
@@ -184,7 +190,7 @@ public class BezierCurveEditor : Editor
             float startWidth = rect.width;
             float startX = rect.x;
 
-            EditorGUI.BeginChangeCheck();
+
             rect.height = singleLine;
             rect.width = startWidth * 0.2f;
             rect.x += startWidth * 0.05f;
@@ -220,61 +226,82 @@ public class BezierCurveEditor : Editor
             rect.width = startWidth;
             rect.x = startX;
 
-            //GUILayout.BeginVertical("Box");
-            Vector3 pos = EditorGUI.Vector3Field(rect, "Anchor Pos",
-                Target.Points[index].LocalPosition);
-            rect.y += singleLine * 1;
 
-            Vector3 rotInEuler = EditorGUI.Vector3Field(rect, "Anchor Rot",
-                Target.Points[index].LocalRotation.eulerAngles);
-            rect.y += singleLine * 1;
 
-            Vector3 pos_0 = EditorGUI.Vector3Field(rect, "Handle 1th",
-                Target.Points[index].GetHandle(0).LocalPosition);
-            rect.y += singleLine * 1;
-
-            Vector3 pos_1 = EditorGUI.Vector3Field(rect, "Handle 2rd",
-                Target.Points[index].GetHandle(1).LocalPosition);
-            rect.y += singleLine * 1;
-
-            //GUILayout.EndVertical();
-            if (EditorGUI.EndChangeCheck())
+            bool foldout = active;
+            float height = EditorGUIUtility.singleLineHeight * 1.25f;
+            if (foldout)
             {
-                Undo.RecordObject(Target, "Changed handle transform");
-                Target.SetAnchorLocalRotation(index, Quaternion.Euler(rotInEuler));
-                Target.SetAnchorLocalPosition(index, pos);
-                Target.Points[index].SetHandleLocalPosition(0, pos_0);
-                Target.Points[index].SetHandleLocalPosition(1, pos_1);
-                SceneView.RepaintAll();
+                height = EditorGUIUtility.singleLineHeight * 6;
+
+                EditorGUI.BeginChangeCheck();
+                //GUILayout.BeginVertical("Box");
+                Vector3 pos = EditorGUI.Vector3Field(rect, "Anchor Pos",
+                    Target.Points[index].LocalPosition);
+                rect.y += singleLine * 1;
+
+                Vector3 rotInEuler = EditorGUI.Vector3Field(rect, "Anchor Rot",
+                    Target.Points[index].LocalRotation.eulerAngles);
+                rect.y += singleLine * 1;
+
+                Vector3 pos_0 = EditorGUI.Vector3Field(rect, "Handle 1th",
+                    Target.Points[index].GetHandle(0).LocalPosition);
+                rect.y += singleLine * 1;
+
+                Vector3 pos_1 = EditorGUI.Vector3Field(rect, "Handle 2rd",
+                    Target.Points[index].GetHandle(1).LocalPosition);
+                rect.y += singleLine * 1;
+
+                //GUILayout.EndVertical();
+                if (EditorGUI.EndChangeCheck())
+                {
+                    Undo.RecordObject(Target, "Changed handle transform");
+                    Target.SetAnchorLocalRotation(index, Quaternion.Euler(rotInEuler));
+                    Target.SetAnchorLocalPosition(index, pos);
+                    Target.Points[index].SetHandleLocalPosition(0, pos_0);
+                    Target.Points[index].SetHandleLocalPosition(1, pos_1);
+                    SceneView.RepaintAll();
+                }
             }
 
+            try
+            {
+                heights[index] = height;
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                Debug.LogWarning(e.Message);
+            }
+            finally
+            {
+                float[] floats = heights.ToArray();
+                Array.Resize(ref floats, prop.arraySize);
+                heights = floats.ToList();
+            }
+           
+        };
 
+        m_reorderablePointsList.elementHeightCallback = (index) => 
+        {
+            Repaint();
+            float height = 0;
 
-            //GUILayout.BeginVertical();
-            //if (GUILayout.Button(deletePointContent))
-            //{
-            //    Undo.RecordObject(Target, "Deleted a waypoint");
-            //    Target.RemovePoint(Target.Points[m_reorderablePointsList.index]);
-            //    SceneView.RepaintAll();
-            //}
-            //if (GUILayout.Button(resetPointContent))
-            //{
-            //    Undo.RecordObject(Target, "Reset a waypoint");
-            //    Target.SetAnchorLocalPosition(m_reorderablePointsList.index, Vector3.zero);
-            //    Target.SetAnchorLocalRotation(m_reorderablePointsList.index, Quaternion.identity);
-            //    Target.Points[m_reorderablePointsList.index].SetHandleLocalPosition(0, Vector3.zero);
-            //    Target.Points[m_reorderablePointsList.index].SetHandleLocalPosition(1, Vector3.zero);
-            //}
-            //if (GUILayout.Button(gotoPointContent))
-            //{
-            //    Debug.Log("Goto " + m_reorderablePointsList.index);
-            //    m_selectedId = m_reorderablePointsList.index;
-            //    m_selectedHandleId = -1;
-            //    SceneView.lastActiveSceneView.pivot = Target.Points[m_reorderablePointsList.index].Position;
-            //    SceneView.lastActiveSceneView.size = 3;
-            //    SceneView.lastActiveSceneView.Repaint();
-            //}
-            //GUILayout.EndVertical();
+            try
+            {
+                height = heights[index];
+            }
+            catch (ArgumentOutOfRangeException e)
+            {
+                Debug.LogWarning(e.Message);
+            }
+            finally
+            {
+                float[] floats = heights.ToArray();
+                Array.Resize(ref floats, prop.arraySize);
+                heights = floats.ToList();
+            }
+
+            return height;
         };
 
         m_reorderablePointsList.onSelectCallback = list =>
