@@ -270,9 +270,15 @@ public class BezierCurveEditor : Editor
             //GUILayout.EndVertical();
         };
 
-        m_reorderablePointsList.onSelectCallback = l =>
+        m_reorderablePointsList.onSelectCallback = list =>
         {
-            SelectHandleIndex(l.index);
+            //Debug.Log("Select " + list.index);
+            m_selectedId = list.index;
+            m_selectedHandleId = -1;
+            SceneView.lastActiveSceneView.pivot = Target.Points[list.index].Position;
+            SceneView.lastActiveSceneView.size = 3;
+            SceneView.lastActiveSceneView.Repaint();
+            SceneView.RepaintAll();
         };
     }
 
@@ -486,6 +492,8 @@ public class BezierCurveEditor : Editor
                 {
                     SelectIndex(i);
                     SelectHandleIndex(-1);
+                    
+                    m_reorderablePointsList.index = i;
                 }
             }
             else
@@ -507,6 +515,8 @@ public class BezierCurveEditor : Editor
                 {
                     SelectIndex(i);
                     SelectHandleIndex(0);
+
+                    m_reorderablePointsList.index = i;
                 }
             }
             else
@@ -523,6 +533,8 @@ public class BezierCurveEditor : Editor
                 {
                     SelectIndex(i);
                     SelectHandleIndex(1);
+
+                    m_reorderablePointsList.index = i;
                 }
             }
             else
