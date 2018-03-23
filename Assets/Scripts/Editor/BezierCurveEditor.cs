@@ -84,7 +84,11 @@ public class BezierCurveEditor : Editor
         serializedTarget.Update();
         DrawButtons();
         //DrawRawPointsValue();
+        float restoreLabelWidth = EditorGUIUtility.labelWidth;
+        EditorGUIUtility.labelWidth = 80;
+        EditorGUIUtility.wideMode = true;
         m_reorderablePointsList.DoLayoutList();
+        EditorGUIUtility.labelWidth = restoreLabelWidth;
         serializedTarget.ApplyModifiedProperties();
     }
 
@@ -171,18 +175,21 @@ public class BezierCurveEditor : Editor
         m_reorderablePointsList = new ReorderableList(serializedObject, serializedObject.FindProperty("Points"), true, true, false, false);
 
         float singleLine = EditorGUIUtility.singleLineHeight;
-        m_reorderablePointsList.elementHeight = singleLine * 10f;
+        m_reorderablePointsList.elementHeight *= 5;// singleLine * 10f;
 
         m_reorderablePointsList.drawElementCallback = (rect, index, active, focused) =>
         {
             if (index > Target.Points.Count - 1)
                 return;
             float startWidth = rect.width;
+            float startX = rect.x;
 
             EditorGUI.BeginChangeCheck();
-            rect.x = 50;
             rect.height = singleLine;
-            rect.width = startWidth * 0.25f;
+            rect.width = startWidth * 0.2f;
+            rect.x += startWidth * 0.05f;
+            GUI.Label(rect, "# " + index);
+            rect.x += startWidth * 0.25f;
             if (GUI.Button(rect, deletePointContent))
             {
                 Undo.RecordObject(Target, "Deleted a waypoint");
@@ -210,25 +217,25 @@ public class BezierCurveEditor : Editor
             }
             rect.y += singleLine + 10;
 
-            rect.width = startWidth - 50;
-            rect.x = 50;
+            rect.width = startWidth;
+            rect.x = startX;
 
             //GUILayout.BeginVertical("Box");
             Vector3 pos = EditorGUI.Vector3Field(rect, "Anchor Pos",
                 Target.Points[index].LocalPosition);
-            rect.y += singleLine * 2;
+            rect.y += singleLine * 1;
 
             Vector3 rotInEuler = EditorGUI.Vector3Field(rect, "Anchor Rot",
                 Target.Points[index].LocalRotation.eulerAngles);
-            rect.y += singleLine * 2;
+            rect.y += singleLine * 1;
 
             Vector3 pos_0 = EditorGUI.Vector3Field(rect, "Handle 1th",
                 Target.Points[index].GetHandle(0).LocalPosition);
-            rect.y += singleLine * 2;
+            rect.y += singleLine * 1;
 
             Vector3 pos_1 = EditorGUI.Vector3Field(rect, "Handle 2rd",
                 Target.Points[index].GetHandle(1).LocalPosition);
-            rect.y += singleLine * 2;
+            rect.y += singleLine * 1;
 
             //GUILayout.EndVertical();
             if (EditorGUI.EndChangeCheck())
