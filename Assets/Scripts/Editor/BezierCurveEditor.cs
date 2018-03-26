@@ -179,12 +179,10 @@ public class BezierCurveEditor : Editor
         m_reorderablePointsList = new ReorderableList(serializedObject, prop, true, true, false, false);
 
         List<float> heights = new List<float>(prop.arraySize);
+        List<bool> isFoldout = new List<bool>(prop.arraySize);
 
         float singleLine = EditorGUIUtility.singleLineHeight;
         m_reorderablePointsList.elementHeight *= 5;// singleLine * 10f;
-
-
-        bool showTransform = true;
 
         m_reorderablePointsList.drawElementCallback = (rect, index, active, focused) =>
         {
@@ -233,11 +231,10 @@ public class BezierCurveEditor : Editor
             float height = EditorGUIUtility.singleLineHeight * 2.5f;
             if (active)
             {
-                showTransform = true;
-
                 rect.y -= EditorGUIUtility.singleLineHeight * 0.25f;
-                showTransform = EditorGUI.Foldout(rect, showTransform, "transform", true, EditorStyles.foldout);
-                if (showTransform)
+                if (isFoldout.Count > 0)
+                    isFoldout[index] = EditorGUI.Foldout(rect, isFoldout[index], "transform", true, EditorStyles.foldout);
+                if (isFoldout.Count > 0 && isFoldout[index])
                 {
                     rect.y += EditorGUIUtility.singleLineHeight;
                     height = EditorGUIUtility.singleLineHeight * 7;
@@ -276,8 +273,9 @@ public class BezierCurveEditor : Editor
             {
                 rect.y -= EditorGUIUtility.singleLineHeight * 0.25f;
 
-                showTransform = EditorGUI.Foldout(rect, showTransform, "transform", true, EditorStyles.foldout);
-                if (showTransform)
+                if (isFoldout.Count > 0)
+                    isFoldout[index] = EditorGUI.Foldout(rect, isFoldout[index], "transform", true, EditorStyles.foldout);
+                if (isFoldout.Count > 0 && isFoldout[index])
                 {
                     rect.y += EditorGUIUtility.singleLineHeight;
                     height = EditorGUIUtility.singleLineHeight * 7;
@@ -325,6 +323,7 @@ public class BezierCurveEditor : Editor
             float[] floats = heights.ToArray();
             Array.Resize(ref floats, prop.arraySize);
             heights = floats.ToList();
+            isFoldout.Resize(prop.arraySize, false);
         };
 
         m_reorderablePointsList.elementHeightCallback = (index) =>
@@ -338,13 +337,15 @@ public class BezierCurveEditor : Editor
             float[] floats = heights.ToArray();
             Array.Resize(ref floats, prop.arraySize);
             heights = floats.ToList();
+            isFoldout.Resize(prop.arraySize, false);
 
             return height;
         };
 
         m_reorderablePointsList.onSelectCallback = list =>
         {
-            showTransform = true;
+            if (isFoldout.Count > 0)
+                isFoldout[list.index] = true;
             //Debug.Log("Select " + list.index);
             m_selectedId = list.index;
             m_selectedHandleId = -1;
