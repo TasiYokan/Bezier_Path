@@ -229,51 +229,11 @@ public class BezierCurveEditor : Editor
             rect.width = startWidth;
             rect.x = startX;
 
-            
+
             float height = EditorGUIUtility.singleLineHeight * 2.5f;
             if (active)
             {
                 showTransform = true;
-
-                rect.y -= EditorGUIUtility.singleLineHeight * 0.25f;
-                showTransform= EditorGUI.Foldout(rect, showTransform, "transform", true, EditorStyles.foldout);
-                if (showTransform)
-                {
-                    rect.y += EditorGUIUtility.singleLineHeight;
-                    height = EditorGUIUtility.singleLineHeight * 7;
-
-                    EditorGUI.BeginChangeCheck();
-                    //GUILayout.BeginVertical("Box");
-                    Vector3 pos = EditorGUI.Vector3Field(rect, "Anchor Pos",
-                        Target.Points[index].LocalPosition);
-                    rect.y += singleLine * 1;
-
-                    Vector3 rotInEuler = EditorGUI.Vector3Field(rect, "Anchor Rot",
-                        Target.Points[index].LocalRotation.eulerAngles);
-                    rect.y += singleLine * 1;
-
-                    Vector3 pos_0 = EditorGUI.Vector3Field(rect, "Handle 1th",
-                        Target.Points[index].GetHandle(0).LocalPosition);
-                    rect.y += singleLine * 1;
-
-                    Vector3 pos_1 = EditorGUI.Vector3Field(rect, "Handle 2rd",
-                        Target.Points[index].GetHandle(1).LocalPosition);
-                    rect.y += singleLine * 1;
-
-                    //GUILayout.EndVertical();
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        Undo.RecordObject(Target, "Changed handle transform");
-                        Target.SetAnchorLocalRotation(index, Quaternion.Euler(rotInEuler));
-                        Target.SetAnchorLocalPosition(index, pos);
-                        Target.Points[index].SetHandleLocalPosition(0, pos_0);
-                        Target.Points[index].SetHandleLocalPosition(1, pos_1);
-                        SceneView.RepaintAll();
-                    }
-                }
-            }
-            else
-            {
 
                 rect.y -= EditorGUIUtility.singleLineHeight * 0.25f;
                 showTransform = EditorGUI.Foldout(rect, showTransform, "transform", true, EditorStyles.foldout);
@@ -312,43 +272,72 @@ public class BezierCurveEditor : Editor
                     }
                 }
             }
+            else
+            {
+                rect.y -= EditorGUIUtility.singleLineHeight * 0.25f;
 
-            try
-            {
+                showTransform = EditorGUI.Foldout(rect, showTransform, "transform", true, EditorStyles.foldout);
+                if (showTransform)
+                {
+                    rect.y += EditorGUIUtility.singleLineHeight;
+                    height = EditorGUIUtility.singleLineHeight * 7;
+
+                    Rect area = new Rect(rect);
+                    area.y -= EditorGUIUtility.singleLineHeight * 0.2f;
+                    area.x += 2f;
+                    area.height *= 4.3f;
+                    EditorGUI.DrawRect(area, Color.white);
+
+                    EditorGUI.BeginChangeCheck();
+                    //GUILayout.BeginVertical("Box");
+                    Vector3 pos = EditorGUI.Vector3Field(rect, "Anchor Pos",
+                        Target.Points[index].LocalPosition);
+                    rect.y += singleLine * 1;
+
+                    Vector3 rotInEuler = EditorGUI.Vector3Field(rect, "Anchor Rot",
+                        Target.Points[index].LocalRotation.eulerAngles);
+                    rect.y += singleLine * 1;
+
+                    Vector3 pos_0 = EditorGUI.Vector3Field(rect, "Handle 1th",
+                        Target.Points[index].GetHandle(0).LocalPosition);
+                    rect.y += singleLine * 1;
+
+                    Vector3 pos_1 = EditorGUI.Vector3Field(rect, "Handle 2rd",
+                        Target.Points[index].GetHandle(1).LocalPosition);
+                    rect.y += singleLine * 1;
+
+                    //GUILayout.EndVertical();
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        Undo.RecordObject(Target, "Changed handle transform");
+                        Target.SetAnchorLocalRotation(index, Quaternion.Euler(rotInEuler));
+                        Target.SetAnchorLocalPosition(index, pos);
+                        Target.Points[index].SetHandleLocalPosition(0, pos_0);
+                        Target.Points[index].SetHandleLocalPosition(1, pos_1);
+                        SceneView.RepaintAll();
+                    }
+                }
+            }
+
+            if (heights.Count > 0)
                 heights[index] = height;
-            }
-            catch (ArgumentOutOfRangeException e)
-            {
-                Debug.LogWarning(e.Message);
-            }
-            finally
-            {
-                float[] floats = heights.ToArray();
-                Array.Resize(ref floats, prop.arraySize);
-                heights = floats.ToList();
-            }
-           
+
+            float[] floats = heights.ToArray();
+            Array.Resize(ref floats, prop.arraySize);
+            heights = floats.ToList();
         };
 
-        m_reorderablePointsList.elementHeightCallback = (index) => 
+        m_reorderablePointsList.elementHeightCallback = (index) =>
         {
             Repaint();
             float height = 0;
 
-            try
-            {
+            if (heights.Count > 0)
                 height = heights[index];
-            }
-            catch (ArgumentOutOfRangeException e)
-            {
-                Debug.LogWarning(e.Message);
-            }
-            finally
-            {
-                float[] floats = heights.ToArray();
-                Array.Resize(ref floats, prop.arraySize);
-                heights = floats.ToList();
-            }
+
+            float[] floats = heights.ToArray();
+            Array.Resize(ref floats, prop.arraySize);
+            heights = floats.ToList();
 
             return height;
         };
@@ -576,7 +565,7 @@ public class BezierCurveEditor : Editor
                 {
                     SelectIndex(i);
                     SelectHandleIndex(-1);
-                    
+
                     m_reorderablePointsList.index = i;
                 }
             }
