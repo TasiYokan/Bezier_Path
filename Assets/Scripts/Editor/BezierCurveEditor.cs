@@ -41,6 +41,7 @@ public class BezierCurveEditor : Editor
     private int m_selectedId = -1;
     private int m_selectedHandleId = -1;
     private bool m_drawPathInEditor = true;
+    private bool m_autoSmooth = false;
     private ReorderableList m_reorderablePointsList;
 
     #endregion Editor Variable
@@ -124,6 +125,7 @@ public class BezierCurveEditor : Editor
     {
         m_manipulateMode = (ManipulationMode)PlayerPrefs.GetInt("Editor_ManipulateMode", 0);
         m_drawPathInEditor = PlayerPrefs.GetInt("Editor_DrawPath", 1) == 1;
+        m_autoSmooth = PlayerPrefs.GetInt("Editor_AutoSmooth", 0) == 1;
         m_visualSetting = new VisualSetting();
     }
 
@@ -143,6 +145,13 @@ public class BezierCurveEditor : Editor
         if (EditorGUI.EndChangeCheck())
         {
             PlayerPrefs.SetInt("Editor_DrawPath", m_drawPathInEditor ? 1 : 0);
+        }
+
+        EditorGUI.BeginChangeCheck();
+        m_autoSmooth = GUILayout.Toggle(m_autoSmooth, "Smooth another handle in the BezierPoint", GUILayout.Width(Screen.width));
+        if(EditorGUI.EndChangeCheck())
+        {
+            PlayerPrefs.SetInt("Editor_AutoSmooth", m_autoSmooth ? 1 : 0);
         }
 
         isAutoConnectProperty.boolValue = GUILayout.Toggle(isAutoConnectProperty.boolValue, "Connect first and last nodes?", GUILayout.Width(Screen.width));
@@ -682,11 +691,11 @@ public class BezierCurveEditor : Editor
             }
             else if (m_selectedHandleId == 0)
             {
-                Target.Points[i].SetHandlePosition(0, pos_0);
+                Target.Points[i].SetHandlePosition(0, pos_0, m_autoSmooth);
             }
             else if (m_selectedHandleId == 1)
             {
-                Target.Points[i].SetHandlePosition(1, pos_1);
+                Target.Points[i].SetHandlePosition(1, pos_1, m_autoSmooth);
             }
             Repaint();
         }

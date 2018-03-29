@@ -122,16 +122,26 @@ public class BezierPoint
         return m_handles[_id];
     }
 
-    public void SetHandlePosition(int _id, Vector3 _position)
+    public void SetHandlePosition(int _id, Vector3 _position, bool _autoSmooth = false)
     {
         m_handles[_id].Position = _position;
         m_handles[_id].LocalPosition = Quaternion.Inverse(this.Rotation) * (_position - this.Position);
+
+        if (_autoSmooth)
+        {
+            SetHandleLocalPosition(1 - _id, -m_handles[_id].LocalPosition, false);
+        }
     }
 
-    public void SetHandleLocalPosition(int _id, Vector3 _localPosition)
+    public void SetHandleLocalPosition(int _id, Vector3 _localPosition, bool _autoSmooth = false)
     {
         m_handles[_id].LocalPosition = _localPosition;
         m_handles[_id].Position = this.Rotation * _localPosition + this.Position;
+
+        if (_autoSmooth)
+        {
+            SetHandleLocalPosition(1 - _id, -m_handles[_id].LocalPosition, false);
+        }
     }
 
     /// <summary>
