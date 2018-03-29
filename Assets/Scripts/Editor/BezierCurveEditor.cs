@@ -155,17 +155,39 @@ public class BezierCurveEditor : Editor
 
         if (GUILayout.Button(addPointContent))
         {
+            Undo.RecordObject(Target, "Added a waypoint");
+
             BezierPoint point = new BezierPoint(
-                SceneView.lastActiveSceneView.camera.transform.position + SceneView.lastActiveSceneView.camera.transform.forward * 3f,
-                Quaternion.identity,
-                true);
+                    Vector3.zero,
+                    Quaternion.identity,
+                    true); ;
             Target.AddPoint(point);
+
+            if (Target.Points.Count > 1)
+            {
+                Vector3 dir = - SceneView.lastActiveSceneView.camera.transform.right;
+                if (Target.Points.Count > 2)
+                {
+                    Vector3 prevDir = (Target.Points[Target.Points.Count - 2].Position - Target.Points[Target.Points.Count - 3].Position);
+                    dir *= prevDir.magnitude;
+                    if (Vector3.Dot(prevDir , dir) < 0)
+                    {
+                        dir *= -1;
+                    }
+                }
+                Target.SetAnchorPosition(Target.Points.Count - 1,
+                    Target.Points[Target.Points.Count - 2].Position +  dir);
+            }
+
+            SceneView.RepaintAll();
         }
 
         if (GUILayout.Button(clearAllPointsContent))
         {
             //TODO: Use Target.RemoveAll() later
             Target.Points.Clear();
+
+            SceneView.RepaintAll();
         }
 
         GUILayout.Space(10);
@@ -211,6 +233,7 @@ public class BezierCurveEditor : Editor
                 Target.SetAnchorLocalRotation(index, Quaternion.identity);
                 Target.Points[index].SetHandleLocalPosition(0, Vector3.zero);
                 Target.Points[index].SetHandleLocalPosition(1, Vector3.zero);
+                SceneView.RepaintAll();
             }
             rect.x += startWidth * 0.25f;
             if (GUI.Button(rect, gotoPointContent))
