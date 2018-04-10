@@ -18,7 +18,7 @@ public class BezierCurveEditor : Editor
 
     private class VisualSetting
     {
-        public Color pathColor = Color.green;
+        public Color pathColor = Color.red;
         public Color inactivePathColor = Color.gray;
         public Color handleColor = Color.white;
         public Color activeHandleColor = Color.yellow;
@@ -149,7 +149,7 @@ public class BezierCurveEditor : Editor
 
         EditorGUI.BeginChangeCheck();
         m_autoSmooth = GUILayout.Toggle(m_autoSmooth, "Smooth another handle in the BezierPoint", GUILayout.Width(Screen.width));
-        if(EditorGUI.EndChangeCheck())
+        if (EditorGUI.EndChangeCheck())
         {
             PlayerPrefs.SetInt("Editor_AutoSmooth", m_autoSmooth ? 1 : 0);
         }
@@ -174,18 +174,20 @@ public class BezierCurveEditor : Editor
 
             if (Target.Points.Count > 1)
             {
-                Vector3 dir = - SceneView.lastActiveSceneView.camera.transform.right;
+                Vector3 dir = -SceneView.lastActiveSceneView.camera.transform.right;
                 if (Target.Points.Count > 2)
                 {
                     Vector3 prevDir = (Target.Points[Target.Points.Count - 2].Position - Target.Points[Target.Points.Count - 3].Position);
                     dir *= prevDir.magnitude;
-                    if (Vector3.Dot(prevDir , dir) < 0)
+                    if (Vector3.Dot(prevDir, dir) < 0)
                     {
                         dir *= -1;
                     }
                 }
                 Target.SetAnchorPosition(Target.Points.Count - 1,
-                    Target.Points[Target.Points.Count - 2].Position +  dir);
+                    Target.Points[Target.Points.Count - 2].Position + dir);
+                Target.SetAnchorRotation(Target.Points.Count - 1,
+                    Quaternion.LookRotation(dir));
             }
 
             SceneView.RepaintAll();
@@ -251,7 +253,19 @@ public class BezierCurveEditor : Editor
                 m_selectedId = index;
                 m_selectedHandleId = -1;
                 SceneView.lastActiveSceneView.pivot = Target.Points[index].Position;
-                SceneView.lastActiveSceneView.size = 3;
+
+                float centerY = Target.Points[m_selectedId].Position.y;
+                float maxY = 3;
+                for (int i = 0; i < Target.Points.Count; ++i)
+                {
+                    if(Mathf.Abs(Target.Points[i].Position.y - centerY) > maxY)
+                    {
+                        maxY = Mathf.Abs(Target.Points[i].Position.y - centerY);
+                    }
+                }
+
+                SceneView.lastActiveSceneView.size = maxY / Mathf.Tan(SceneView.lastActiveSceneView.camera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+
                 SceneView.lastActiveSceneView.Repaint();
             }
             rect.y += singleLine + 10;
@@ -382,7 +396,20 @@ public class BezierCurveEditor : Editor
             m_selectedId = list.index;
             m_selectedHandleId = -1;
             SceneView.lastActiveSceneView.pivot = Target.Points[list.index].Position;
-            SceneView.lastActiveSceneView.size = 3;
+
+            float centerY = Target.Points[m_selectedId].Position.y;
+            float maxY = 3;
+            for (int i = 0; i < Target.Points.Count; ++i)
+            {
+                if (Mathf.Abs(Target.Points[i].Position.y - centerY) > maxY)
+                {
+                    maxY = Mathf.Abs(Target.Points[i].Position.y - centerY);
+                }
+            }
+
+            SceneView.lastActiveSceneView.size = maxY / Mathf.Tan(SceneView.lastActiveSceneView.camera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+
+            //SceneView.lastActiveSceneView.size = 3;
             SceneView.lastActiveSceneView.Repaint();
             SceneView.RepaintAll();
         };
