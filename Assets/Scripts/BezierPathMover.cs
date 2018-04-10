@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.Events;
+using System;
 
 public class BezierPathMover : MonoBehaviour
 {
@@ -27,6 +28,7 @@ public class BezierPathMover : MonoBehaviour
     public Vector3 rotationConstrain = new Vector3(180, 180, 180);
 
     public UnityEvent onEndCallback;
+    public Action<int> onCompleteEveryNode;
 
     // Use this for initialization
     void Start()
@@ -80,7 +82,14 @@ public class BezierPathMover : MonoBehaviour
             if (keepSteadicamStable)
                 m_curSampleId = bezierPath.Fragments[m_curFragId].FindNearestSampleOnFrag(transform.position, ref m_offset);
 
+            int prevId = m_curFragId;
             bezierPath.GetCurvePos(ref m_curFragId, ref m_curSampleId, speedInSecond * Time.deltaTime, ref m_offset);
+
+            if (m_curFragId != prevId)
+            {
+                if (onCompleteEveryNode != null)
+                    onCompleteEveryNode(m_curFragId);
+            }
 
             if (m_curFragId < 0 || m_curFragId >= bezierPath.Fragments.Count
                 || bezierPath.Fragments[m_curFragId].SampleIdWithinFragment(m_curSampleId) == false)
