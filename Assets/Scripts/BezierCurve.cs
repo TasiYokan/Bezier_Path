@@ -2,6 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 
+#if UNITY_EDITOR
+    using UnityEditor;
+#endif
+
 public class BezierCurve : MonoBehaviour
 {
     public List<BezierPoint> Points;
@@ -94,7 +98,7 @@ public class BezierCurve : MonoBehaviour
     public void SetAnchorPosition(int _id, Vector3 _position)
     {
         Points[_id].Position = _position;
-        Points[_id].LocalPosition = 
+        Points[_id].LocalPosition =
             Vector3.Scale(transform.localScale.Reciprocal(),
             Quaternion.Inverse(transform.rotation)
             * (_position - transform.position));
@@ -105,8 +109,8 @@ public class BezierCurve : MonoBehaviour
         Points[_id].LocalPosition = _localPosition;
         Points[_id].Position =
             transform.position
-            + transform.rotation 
-            * Vector3.Scale(transform.localScale , _localPosition);
+            + transform.rotation
+            * Vector3.Scale(transform.localScale, _localPosition);
     }
 
     public void SetAnchorRotation(int _id, Quaternion _rotation)
@@ -269,4 +273,42 @@ public class BezierCurve : MonoBehaviour
             point.UpdatePosition();
         }
     }
+
+#if UNITY_EDITOR
+    public void OnDrawGizmos()
+    {
+        if (UnityEditor.Selection.activeGameObject != gameObject)
+        {
+            if (Points.Count >= 2)
+            {
+                for (int i = 0; i < Points.Count; i++)
+                {
+                    if (i < Points.Count - 1)
+                    {
+                        var index = Points[i];
+                        var indexNext = Points[i + 1];
+                        UnityEditor.Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
+                        indexNext.GetHandle(1).Position, Color.gray, null, 5);
+                    }
+                    else if (isAutoConnect)
+                    {
+                        var index = Points[i];
+                        var indexNext = Points[0];
+                        UnityEditor.Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
+                        indexNext.GetHandle(1).Position, Color.gray, null, 5);
+                    }
+                }
+            }
+
+            float size = HandleUtility.GetHandleSize(gameObject.transform.position) * 0.1f;
+            for (int i = 0; i < Points.Count; i++)
+            {
+                Gizmos.matrix = Matrix4x4.TRS(Points[i].Position, Points[i].Rotation, Vector3.one);
+                Gizmos.color = Color.white;
+                Gizmos.DrawWireSphere(Vector3.zero, size);
+                Gizmos.matrix = Matrix4x4.identity;
+            }
+        }
+    }
+#endif
 }
