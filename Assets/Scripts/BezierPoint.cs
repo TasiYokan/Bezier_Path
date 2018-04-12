@@ -1,21 +1,22 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.Serialization;
 
 [System.Serializable]
 public class BezierPoint
 {
-    public int activeHandleId = 1;
-
+    private int activeHandleId = 1;
+    
     [SerializeField]
     private BezierHandle[] m_handles = new BezierHandle[2];
-    [SerializeField]
-    private Vector3 m_position;
+
     [SerializeField]
     private Vector3 m_localPosition;
-    [SerializeField]
-    private Quaternion m_rotation;
+    private Vector3 m_position;
+
     [SerializeField]
     private Quaternion m_localRotation;
+    private Quaternion m_rotation;
 
     [SerializeField]
     private bool m_isAutoSmooth;
@@ -43,7 +44,6 @@ public class BezierPoint
         set
         {
             m_position = value;
-            UpdateHandlesPosition();
         }
     }
 
@@ -84,6 +84,11 @@ public class BezierPoint
         {
             m_localRotation = value;
         }
+    }
+
+    public BezierPoint()
+    {
+        Debug.Log("Default");
     }
 
     /// <summary>

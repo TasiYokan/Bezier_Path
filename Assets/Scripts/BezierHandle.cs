@@ -5,12 +5,10 @@ using UnityEngine.Assertions;
 [System.Serializable]
 public class BezierHandle : IBezierPos
 {
-    [SerializeField]
     private Vector3 m_position;
     [SerializeField]
     private Vector3 m_localPosition;
     
-
     public Vector3 Position
     {
         get

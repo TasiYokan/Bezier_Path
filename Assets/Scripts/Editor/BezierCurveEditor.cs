@@ -521,8 +521,6 @@ public class BezierCurveEditor : Editor
         {
             for (int i = 0; i < Target.Points.Count; i++)
             {
-                Target.Points[i].UpdateHandlesPosition();
-
                 if (i < Target.Points.Count - 1)
                 {
                     var index = Target.Points[i];
