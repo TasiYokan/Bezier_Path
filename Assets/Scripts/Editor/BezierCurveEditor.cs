@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TasiYokan.Utilities.Serialization;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
@@ -49,10 +50,13 @@ public class BezierCurveEditor : Editor
     #region Editor GUIs
 
     private GUIContent addPointContent = new GUIContent("Add WayPoint", "Add a BezierPoint");
+    private GUIContent clearAllPointsContent = new GUIContent("Clear All", "Delete all BezierPoint");
+    private GUIContent savePathData = new GUIContent("Save Path", "Write Path Nodes into file");
+    private GUIContent loadPathData = new GUIContent("Load Path", "Read Path Nodes from file");
+
     private GUIContent deletePointContent = new GUIContent("Delete", "Deletes this BezierPoint");
     private GUIContent resetPointContent = new GUIContent("Reset", "Select this BezierPoint");
     private GUIContent gotoPointContent = new GUIContent("Goto", "Select this BezierPoint");
-    private GUIContent clearAllPointsContent = new GUIContent("Clear All", "Delete all BezierPoint");
 
     #endregion Editor GUIs
 
@@ -197,6 +201,18 @@ public class BezierCurveEditor : Editor
         {
             //TODO: Use Target.RemoveAll() later
             Target.Points.Clear();
+
+            SceneView.RepaintAll();
+        }
+
+        if(GUILayout.Button(savePathData))
+        {
+            JsonSerializationHelper.WriteJsonList<BezierPoint>(Application.dataPath + "/Datas/Data.json", Target.Points);
+        }
+
+        if(GUILayout.Button(loadPathData))
+        {
+            Target.Points = JsonSerializationHelper.ReadJsonList<BezierPoint>(Application.dataPath + "/Datas/Data.json");
 
             SceneView.RepaintAll();
         }
