@@ -76,6 +76,10 @@ public class BezierPathMover : MonoBehaviour
         {
             speedInSecond = bezierPath.totalLength / duration;
         }
+
+        bezierPath.UpdateAnchorTransforms();
+        bezierPath.ForceUpdateAllFrags();
+
         while (true)
         {
             // To make mover Steadicam stable

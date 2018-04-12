@@ -44,6 +44,7 @@ public class BezierPoint
         set
         {
             m_position = value;
+            UpdateHandlesPosition();
         }
     }
 

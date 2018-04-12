@@ -207,12 +207,37 @@ public class BezierCurveEditor : Editor
 
         if(GUILayout.Button(savePathData))
         {
-            JsonSerializationHelper.WriteJsonList<BezierPoint>(Application.dataPath + "/Datas/Data.json", Target.Points);
+            string savePath = EditorUtility.SaveFilePanel(
+                "Save path into file",
+                Application.dataPath,
+                Target.name,
+                "json");
+
+            if (savePath.Length != 0)
+            {
+                JsonSerializationHelper.WriteJsonList<BezierPoint>(savePath, Target.Points);
+            }
+
         }
 
         if(GUILayout.Button(loadPathData))
         {
-            Target.Points = JsonSerializationHelper.ReadJsonList<BezierPoint>(Application.dataPath + "/Datas/Data.json");
+            // Simple version
+            //string loadPath = EditorUtility.OpenFilePanel(
+            //    "Load path from file",
+            //    Application.dataPath,
+            //    "json,*");
+
+            // More customized
+            string loadPath = EditorUtility.OpenFilePanelWithFilters(
+                "Load path from file",
+                Application.dataPath,
+                new string[] { "Json files", "json", "All files", "*" });
+            if (loadPath.Length != 0)
+            {
+                Target.Points = JsonSerializationHelper.ReadJsonList<BezierPoint>(loadPath);
+            }
+            Target.UpdateAnchorTransforms();
 
             SceneView.RepaintAll();
         }
@@ -515,7 +540,7 @@ public class BezierCurveEditor : Editor
         if (m_drawPathInEditor == false || Target.Points == null)
             return;
 
-        Target.UpdateAnchorsTransform();
+        Target.UpdateAnchorTransforms();
 
         if (Target.Points.Count >= 2)
         {

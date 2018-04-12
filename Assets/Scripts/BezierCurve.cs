@@ -81,7 +81,7 @@ public class BezierCurve : MonoBehaviour
     /// Update anchors' position based on their localPosition
     /// Called every frame or everytime changed?
     /// </summary>
-    public void UpdateAnchorsTransform()
+    public void UpdateAnchorTransforms()
     {
         for (int i = 0; i < Points.Count; ++i)
         {
@@ -102,7 +102,6 @@ public class BezierCurve : MonoBehaviour
             Vector3.Scale(transform.localScale.Reciprocal(),
             Quaternion.Inverse(transform.rotation)
             * (_position - transform.position));
-        Points[_id].UpdateHandlesPosition();
     }
 
     public void SetAnchorLocalPosition(int _id, Vector3 _localPosition)
@@ -112,21 +111,18 @@ public class BezierCurve : MonoBehaviour
             transform.position
             + transform.rotation
             * Vector3.Scale(transform.localScale, _localPosition);
-        Points[_id].UpdateHandlesPosition();
     }
 
     public void SetAnchorRotation(int _id, Quaternion _rotation)
     {
         Points[_id].Rotation = _rotation;
         Points[_id].LocalRotation = Quaternion.Inverse(transform.rotation) * _rotation;
-        Points[_id].UpdateHandlesPosition();
     }
 
     public void SetAnchorLocalRotation(int _id, Quaternion _localRotation)
     {
         Points[_id].LocalRotation = _localRotation;
         Points[_id].Rotation = transform.rotation * _localRotation;
-        Points[_id].UpdateHandlesPosition();
     }
 
     public void GetCurvePos(ref int _fragId, ref int _sampleId, float _speed, ref Vector3 _offset)
@@ -232,12 +228,22 @@ public class BezierCurve : MonoBehaviour
     /// Update all frags in list and return the total count of sample position
     /// </summary>
     /// <returns></returns>
-    public int ForceUpdateFrags()
+    public int ForceUpdateAllFrags()
     {
         int totalPos = 1;
         foreach (var frag in m_fragments)
         {
-            //frag.UpdateSamplePos();
+            frag.UpdateSamplePos();
+            totalPos += frag.InitSampleCount - 1;
+        }
+        return totalPos;
+    }
+
+    private int GetTotalSampleCount()
+    {
+        int totalPos = 1;
+        foreach (var frag in m_fragments)
+        {
             totalPos += frag.InitSampleCount - 1;
         }
         return totalPos;
@@ -252,7 +258,7 @@ public class BezierCurve : MonoBehaviour
 
     private void DrawDebugCurve()
     {
-        int totalPos = ForceUpdateFrags();
+        int totalPos = GetTotalSampleCount();
         m_lineRenderer.positionCount = totalPos;
 
         int curPos = 0;
@@ -305,13 +311,13 @@ public class BezierCurve : MonoBehaviour
             }
 
             float size = HandleUtility.GetHandleSize(gameObject.transform.position) * 0.1f;
-            for (int i = 0; i < Points.Count; i++)
-            {
-                Gizmos.matrix = Matrix4x4.TRS(Points[i].Position, Points[i].Rotation, Vector3.one);
-                Gizmos.color = Color.white;
-                Gizmos.DrawWireSphere(Vector3.zero, size);
-                Gizmos.matrix = Matrix4x4.identity;
-            }
+            //for (int i = 0; i < Points.Count; i++)
+            //{
+            //    Gizmos.matrix = Matrix4x4.TRS(Points[i].Position, Points[i].Rotation, Vector3.one);
+            //    Gizmos.color = Color.white;
+            //    Gizmos.DrawWireSphere(Vector3.zero, size);
+            //    Gizmos.matrix = Matrix4x4.identity;
+            //}
         }
     }
 #endif
