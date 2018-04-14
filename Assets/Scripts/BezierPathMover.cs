@@ -7,6 +7,8 @@ public class BezierPathMover : MonoBehaviour
 {
     public BezierCurve bezierPath;
     public float speedInSecond;
+    public float referenceSpeedInSecond;
+    public AnimationCurve speedCurve;
     /// <summary>
     /// Have bugs sometime, still in alpha phase
     /// </summary>
@@ -24,11 +26,12 @@ public class BezierPathMover : MonoBehaviour
     private bool m_isStopped = false;
     // Offset from corresponding curve point 
     private Vector3 m_offset;
+    private float m_elapsedTime = 0;
 
     public Vector3 rotationConstrain = new Vector3(180, 180, 180);
 
     public UnityEvent onEndCallback;
-    public Action<int> onCompleteEveryNode;
+    public Action<int> onEveryNodeComplete;
 
     // Use this for initialization
     void Start()
@@ -82,6 +85,12 @@ public class BezierPathMover : MonoBehaviour
 
         while (true)
         {
+            if (duration > 0)
+            {
+                speedInSecond = 
+                    referenceSpeedInSecond * speedCurve.Evaluate(m_elapsedTime / duration);
+            }
+
             // To make mover Steadicam stable
             if (keepSteadicamStable)
                 m_curSampleId = bezierPath.Fragments[m_curFragId].FindNearestSampleOnFrag(transform.position, ref m_offset);
@@ -91,8 +100,8 @@ public class BezierPathMover : MonoBehaviour
 
             if (m_curFragId != prevId)
             {
-                if (onCompleteEveryNode != null)
-                    onCompleteEveryNode(m_curFragId);
+                if (onEveryNodeComplete != null)
+                    onEveryNodeComplete(m_curFragId);
             }
 
             if (m_curFragId < 0 || m_curFragId >= bezierPath.Fragments.Count
@@ -126,6 +135,8 @@ public class BezierPathMover : MonoBehaviour
                 Mathf.Clamp(rotInEuler.z, -rotationConstrain.z, rotationConstrain.z));
 
             transform.rotation = Quaternion.Euler(rotInEuler);
+
+            m_elapsedTime += Time.deltaTime;
 
             yield return null;
         }

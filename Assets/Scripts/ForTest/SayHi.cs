@@ -8,7 +8,7 @@ public class SayHi : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        GetComponent<BezierPathMover>().onCompleteEveryNode += SayHiAfterReachNode;
+        GetComponent<BezierPathMover>().onEveryNodeComplete += SayHiAfterReachNode;
     }
 
     // Update is called once per frame
@@ -24,6 +24,6 @@ public class SayHi : MonoBehaviour
 
     public void SayHiAfterReachNode(int _id)
     {
-        print("Say Hi " + _id);
+        //print("Say Hi " + _id);
     }
 }

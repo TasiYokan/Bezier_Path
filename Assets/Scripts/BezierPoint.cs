@@ -87,11 +87,6 @@ public class BezierPoint
         }
     }
 
-    public BezierPoint()
-    {
-        Debug.Log("Default");
-    }
-
     /// <summary>
     /// Avoid misset values when deserializing.
     /// Only used when click add point button or create one in game.
