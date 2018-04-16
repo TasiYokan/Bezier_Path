@@ -43,6 +43,9 @@ public class BezierPathMoverEditor : Editor
 
     void InitKeyframes()
     {
+        if (Target.speedCurve == null)
+            Target.speedCurve = new AnimationCurve();
+
         if (Target.speedCurve.keys.Length < Target.bezierPath.Points.Count)
         {
             float interval = 1f / (Target.bezierPath.Points.Count - 1);
