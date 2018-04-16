@@ -48,7 +48,7 @@ public class BezierCurve : MonoBehaviour
         InitFragmentsFromPoints();
     }
 
-    private void InitFragmentsFromPoints()
+    public void InitFragmentsFromPoints()
     {
         m_fragments = new List<BezierFragment>();
         for (int i = 0; i < Points.Count - 1; i++)
@@ -289,6 +289,7 @@ public class BezierCurve : MonoBehaviour
     {
         if (UnityEditor.Selection.activeGameObject != gameObject)
         {
+            UpdateAnchorTransforms();
             if (Points.Count >= 2)
             {
                 for (int i = 0; i < Points.Count; i++)
@@ -311,13 +312,13 @@ public class BezierCurve : MonoBehaviour
             }
 
             float size = HandleUtility.GetHandleSize(gameObject.transform.position) * 0.1f;
-            //for (int i = 0; i < Points.Count; i++)
-            //{
-            //    Gizmos.matrix = Matrix4x4.TRS(Points[i].Position, Points[i].Rotation, Vector3.one);
-            //    Gizmos.color = Color.white;
-            //    Gizmos.DrawWireSphere(Vector3.zero, size);
-            //    Gizmos.matrix = Matrix4x4.identity;
-            //}
+            for (int i = 0; i < Points.Count; i++)
+            {
+                Gizmos.matrix = Matrix4x4.TRS(Points[i].Position, Points[i].Rotation, Vector3.one);
+                Gizmos.color = Color.white;
+                Gizmos.DrawWireSphere(Vector3.zero, size);
+                Gizmos.matrix = Matrix4x4.identity;
+            }
         }
     }
 #endif

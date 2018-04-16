@@ -74,20 +74,22 @@ public class BezierPathMover : MonoBehaviour
         m_curSampleId = 0;
         m_offset = Vector3.zero;
 
+        bezierPath.UpdateAnchorTransforms();
+        bezierPath.ForceUpdateAllFrags();
+        bezierPath.InitFragmentsFromPoints();
+
         //print("Start time: " + Time.time);
         if (duration > 0)
         {
             speedInSecond = bezierPath.totalLength / duration;
+            referenceSpeedInSecond = speedInSecond;
         }
-
-        bezierPath.UpdateAnchorTransforms();
-        bezierPath.ForceUpdateAllFrags();
 
         while (true)
         {
-            if (duration > 0)
+            if (referenceSpeedInSecond > 0)
             {
-                speedInSecond = 
+                speedInSecond =
                     referenceSpeedInSecond * speedCurve.Evaluate((m_elapsedTime % duration) / duration);
             }
 
