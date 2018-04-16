@@ -88,7 +88,7 @@ public class BezierPathMover : MonoBehaviour
             if (duration > 0)
             {
                 speedInSecond = 
-                    referenceSpeedInSecond * speedCurve.Evaluate(m_elapsedTime / duration);
+                    referenceSpeedInSecond * speedCurve.Evaluate((m_elapsedTime % duration) / duration);
             }
 
             // To make mover Steadicam stable
