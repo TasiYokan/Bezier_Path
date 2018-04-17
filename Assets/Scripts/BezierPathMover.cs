@@ -8,6 +8,7 @@ public class BezierPathMover : MonoBehaviour
     public BezierCurve bezierPath;
     public float speedInSecond;
     public float referenceSpeedInSecond;
+    public bool alwaysForward = false;
     public AnimationCurve speedCurve;
     /// <summary>
     /// Have bugs sometime, still in alpha phase
@@ -123,7 +124,9 @@ public class BezierPathMover : MonoBehaviour
 
             //transform.forward = bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speedInSecond.Sgn());
             //transform.LookAt(bezierPath.GetNextSamplePosAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn()));
-            transform.forward = Vector3.Lerp(transform.forward, bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speedInSecond.Sgn()), speedInSecond * 10 * Time.deltaTime);
+            transform.forward = Vector3.Lerp(transform.forward, 
+                bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, alwaysForward ? 1 : speedInSecond.Sgn()),
+                Mathf.Abs(speedInSecond) * 10 * Time.deltaTime);
 
             Vector3 rotInEuler = transform.rotation.eulerAngles;
             rotInEuler = new Vector3(
