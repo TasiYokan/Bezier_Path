@@ -144,8 +144,14 @@ public class BezierPathMover : MonoBehaviour
 
             //transform.forward = bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speedInSecond.Sgn());
             //transform.LookAt(bezierPath.GetNextSamplePosAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn()));
+            int curFragId = m_curFragId;
+            int curSampleId = m_curSampleId;
+            if(alwaysForward == true && speedInSecond.Sgn() < 0)
+            {
+                bezierPath.GetNextId(ref curFragId, ref curSampleId, -1);
+            }
             transform.forward = Vector3.Lerp(transform.forward,
-                bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, alwaysForward ? 1 : speedInSecond.Sgn()),
+                bezierPath.GetSampleVectorAmongAllFrags(curFragId, curSampleId, alwaysForward ? 1 : speedInSecond.Sgn()),
                 Mathf.Abs(speedInSecond) * 10 * Time.deltaTime);
 
             Vector3 rotInEuler = transform.rotation.eulerAngles;
