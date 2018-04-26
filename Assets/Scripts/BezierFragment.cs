@@ -98,6 +98,19 @@ public class BezierFragment
         return p;
     }
 
+    public Vector3 CalculateCubicBezierVelocity(float _t)
+    {
+        float u = 1 - _t;
+        float t2 = _t * _t;
+        float u2 = u * u;
+
+        Vector3 p = 3 * u2 * (startPoint.GetHandle(0).Position - startPoint.Position)
+            + 6 * u * _t * (endPoint.GetHandle(1).Position - startPoint.GetHandle(0).Position)
+            + 3 * t2 * (endPoint.Position - endPoint.GetHandle(1).Position);
+
+        return p;
+    }
+
     public int GetSampleId(int _startId, ref float _remainLength)
     {
         if (Mathf.Abs(_remainLength).Sgn() == 0)

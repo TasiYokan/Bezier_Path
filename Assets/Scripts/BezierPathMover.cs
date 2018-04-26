@@ -150,9 +150,25 @@ public class BezierPathMover : MonoBehaviour
             {
                 bezierPath.GetNextId(ref curFragId, ref curSampleId, -1);
             }
-            transform.forward = Vector3.Lerp(transform.forward,
-                bezierPath.GetSampleVectorAmongAllFrags(curFragId, curSampleId, alwaysForward ? 1 : speedInSecond.Sgn()),
-                Mathf.Abs(speedInSecond) * 10 * Time.deltaTime);
+            int nextFragId = curFragId;
+            if (bezierPath.isAutoConnect)
+            {
+                // Find connected frag
+                nextFragId = (nextFragId + 1 + bezierPath.Fragments.Count) % bezierPath.Fragments.Count;
+            }
+            else
+            {
+                nextFragId = Mathf.Clamp(nextFragId + 1, 0, bezierPath.Fragments.Count - 1);
+            }
+
+            //transform.forward = Vector3.Lerp(transform.forward,
+            //    bezierPath.GetSampleVectorAmongAllFrags(curFragId, curSampleId, alwaysForward ? 1 : speedInSecond.Sgn()),
+            //    Mathf.Abs(speedInSecond) * 1 * Time.deltaTime);
+            Vector3 curFragVector = bezierPath.Points[nextFragId].Position - bezierPath.Points[curFragId].Position;
+            Vector3 transVector = this.transform.position - bezierPath.Points[curFragId].Position;
+            float offsetLength = Vector3.Dot(curFragVector, transVector) / curFragVector.sqrMagnitude;
+            transform.forward = bezierPath.Fragments[m_curFragId].CalculateCubicBezierVelocity(offsetLength)
+                * (alwaysForward ? 1 : speedInSecond.Sgn());
 
             Vector3 rotInEuler = transform.rotation.eulerAngles;
             rotInEuler = new Vector3(
