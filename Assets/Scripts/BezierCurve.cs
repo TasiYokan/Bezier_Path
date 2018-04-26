@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 #if UNITY_EDITOR
-    using UnityEditor;
+using UnityEditor;
 #endif
 
 public class BezierCurve : MonoBehaviour
@@ -169,6 +169,11 @@ public class BezierCurve : MonoBehaviour
         _sampleId = curSampleId;
     }
 
+    public Vector3 GetSamplePos(int _fragId, int _sampleId)
+    {
+        return Fragments[_fragId].SamplePos[_sampleId];
+    }
+
     /// <summary>
     /// Find a sample point's vector even it's on the boundary
     /// </summary>
@@ -198,6 +203,33 @@ public class BezierCurve : MonoBehaviour
         }
 
         return m_fragments[fragId].GetSampleVector(sampleId, _step);
+    }
+
+    public void GetNextId(ref int _fragId, ref int _sampleId, int _step)
+    {
+        if (m_fragments[_fragId].SampleIdWithinFragment(_sampleId + _step) == false)
+        {
+            if (isAutoConnect)
+            {
+                // Find connected frag
+                _fragId = (_fragId + _step + m_fragments.Count) % m_fragments.Count;
+                // Sample point can only be the head or rear of the new fragment
+                _sampleId = _step > 0 ? 0 : m_fragments[_fragId].SampleCount - 1;
+            }
+            else
+            {
+                // Fallback: clamp on the boundary
+                if (_fragId + _step < 0 || _fragId + _step > m_fragments.Count - 1)
+                    _sampleId = _step > 0 ? m_fragments[_fragId].SampleCount - 1 : 0;
+                else
+                    _sampleId = _step < 0 ? m_fragments[_fragId].SampleCount - 1 : 0;
+
+                _fragId = Mathf.Clamp(_fragId + _step, 0, m_fragments.Count - 1);
+            }
+        }
+
+        _sampleId += _step;
+        return;
     }
 
     public Vector3 GetNextSamplePosAmongAllFrags(int _fragId, int _sampleId, int _step)

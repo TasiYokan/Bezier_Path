@@ -24,6 +24,8 @@ public class BezierPathMover : MonoBehaviour
     public float duration = -1;
     private int m_curFragId = 0;
     private int m_curSampleId = 0;
+    // Denote the mover is moving along the order of list or not
+    private int m_dirSgn = 0;
     private bool m_isStopped = false;
     // Offset from corresponding curve point 
     private Vector3 m_offset;
@@ -73,6 +75,7 @@ public class BezierPathMover : MonoBehaviour
         m_isStopped = false;
         m_curFragId = 0;
         m_curSampleId = 0;
+        m_dirSgn = 0;
         m_offset = Vector3.zero;
 
         bezierPath.UpdateAnchorTransforms();
@@ -86,17 +89,34 @@ public class BezierPathMover : MonoBehaviour
             referenceSpeedInSecond = speedInSecond;
         }
 
+        m_dirSgn = speedInSecond.Sgn();
+
         while (true)
         {
             if (referenceSpeedInSecond > 0)
             {
                 speedInSecond =
-                    referenceSpeedInSecond * speedCurve.Evaluate((m_elapsedTime) / duration);
+                    referenceSpeedInSecond * speedCurve.Evaluate((m_elapsedTime % duration) / duration);
             }
 
             // To make mover Steadicam stable
-            if (keepSteadicamStable)
-                m_curSampleId = bezierPath.Fragments[m_curFragId].FindNearestSampleOnFrag(transform.position, ref m_offset);
+            //if (keepSteadicamStable)
+            //    m_curSampleId = bezierPath.Fragments[m_curFragId].FindNearestSampleOnFrag(transform.position, ref m_offset);
+
+            // Should switch the back and front sample point of this mover
+            if (m_dirSgn * speedInSecond.Sgn() < 0)
+            {
+                // These are next ids
+                int oldFragId = m_curFragId;
+                int oldSampleId = m_curSampleId;
+                bezierPath.GetNextId(ref m_curFragId, ref m_curSampleId, m_dirSgn);
+
+                Vector3 oldToNew = bezierPath.GetSamplePos(m_curFragId, m_curSampleId)
+                    - bezierPath.GetSamplePos(oldFragId, oldSampleId);
+                // Update offset after switching base
+                m_offset = m_offset - oldToNew;
+                m_dirSgn = speedInSecond.Sgn();
+            }
 
             int prevId = m_curFragId;
             bezierPath.GetCurvePos(ref m_curFragId, ref m_curSampleId, speedInSecond * Time.deltaTime, ref m_offset);
@@ -124,7 +144,7 @@ public class BezierPathMover : MonoBehaviour
 
             //transform.forward = bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speedInSecond.Sgn());
             //transform.LookAt(bezierPath.GetNextSamplePosAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn()));
-            transform.forward = Vector3.Lerp(transform.forward, 
+            transform.forward = Vector3.Lerp(transform.forward,
                 bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, alwaysForward ? 1 : speedInSecond.Sgn()),
                 Mathf.Abs(speedInSecond) * 10 * Time.deltaTime);
 
