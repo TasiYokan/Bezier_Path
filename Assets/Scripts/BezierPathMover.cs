@@ -158,7 +158,7 @@ public class BezierPathMover : MonoBehaviour
             }
             else
             {
-                nextFragId = Mathf.Clamp(nextFragId + 1, 0, bezierPath.Fragments.Count - 1);
+                nextFragId = Mathf.Clamp(nextFragId + 1, 0, bezierPath.Points.Count - 1);
             }
 
             //transform.forward = Vector3.Lerp(transform.forward,
