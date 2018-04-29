@@ -93,11 +93,6 @@ public class BezierPathMover : MonoBehaviour
 
         while (true)
         {
-            if (referenceSpeedInSecond > 0)
-            {
-                speedInSecond =
-                    referenceSpeedInSecond * speedCurve.Evaluate((m_elapsedTime % duration) / duration);
-            }
 
             // To make mover Steadicam stable
             //if (keepSteadicamStable)
@@ -184,6 +179,16 @@ public class BezierPathMover : MonoBehaviour
             transform.rotation = Quaternion.Euler(rotInEuler);
 
             m_elapsedTime += Time.deltaTime;
+            
+            // Update speed based on curve
+            if (referenceSpeedInSecond > 0)
+            {
+                float interval = 1f / bezierPath.Fragments.Count;
+
+                speedInSecond =
+                    referenceSpeedInSecond 
+                    * speedCurve.Evaluate(interval * (curFragId + offsetLength));
+            }
 
             yield return null;
         }

@@ -39,28 +39,46 @@ public class BezierPathMoverEditor : Editor
 
     void OnSceneGUI()
     {
+
+        int keyFrameNum = Target.bezierPath.Points.Count + (Target.bezierPath.isAutoConnect ? 1 : 0);
+        //Debug.Log("points " + keyFrameNum);
+
+        float interval = 1f / (keyFrameNum - 1);
+        if (Target.speedCurve.keys.Length < keyFrameNum)
+        {
+            for (int i = 0; i < Target.speedCurve.keys.Length; ++i)
+            {
+                Keyframe keyframe = Target.speedCurve[i];
+                keyframe.time = i * interval;
+                Target.speedCurve.MoveKey(i, keyframe);
+            }
+
+            for (int i = Target.speedCurve.keys.Length; i < keyFrameNum; ++i)
+            {
+                Target.speedCurve.AddKey(i * interval, 1);
+            }
+        }
+        else if (Target.speedCurve.keys.Length > keyFrameNum)
+        {
+            for (int i = Target.speedCurve.keys.Length - 1; i > keyFrameNum - 1; --i)
+            {
+                Target.speedCurve.RemoveKey(i);
+            }
+        }
+
+        // Align the last keyframe with the first one since they are the same point
+        if(Target.bezierPath.isAutoConnect)
+        {
+            Keyframe keyframe = Target.speedCurve[keyFrameNum - 1];
+            keyframe.value = Target.speedCurve[0].value;
+            Target.speedCurve.MoveKey(keyFrameNum - 1, keyframe);
+        }
     }
 
     void InitKeyframes()
     {
         if (Target.speedCurve == null)
             Target.speedCurve = new AnimationCurve();
-
-        if (Target.speedCurve.keys.Length < Target.bezierPath.Points.Count)
-        {
-            float interval = 1f / (Target.bezierPath.Points.Count - 1);
-            for (int ei = 0; ei < Target.speedCurve.keys.Length; ++ei)
-            {
-                Keyframe keyframe = Target.speedCurve[ei];
-                keyframe.time = ei * interval;
-                Target.speedCurve.MoveKey(ei, keyframe);
-            }
-
-            for (int i = Target.speedCurve.keys.Length; i < Target.bezierPath.Points.Count; ++i)
-            {
-                Target.speedCurve.AddKey(i * interval, 1);
-            }
-        }
     }
 
     // Update is called once per frame
