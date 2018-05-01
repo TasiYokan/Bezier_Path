@@ -5,6 +5,13 @@ using System;
 
 public class BezierPathMover : MonoBehaviour
 {
+    public enum MoveMode
+    {
+        NodeBased = 0,
+        DurationBased = 1
+    }
+
+    public MoveMode mode;
     public BezierCurve bezierPath;
     public float speedInSecond;
     public float referenceSpeedInSecond;
@@ -141,7 +148,7 @@ public class BezierPathMover : MonoBehaviour
             //transform.LookAt(bezierPath.GetNextSamplePosAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn()));
             int curFragId = m_curFragId;
             int curSampleId = m_curSampleId;
-            if(alwaysForward == true && speedInSecond.Sgn() < 0)
+            if (alwaysForward == true && speedInSecond.Sgn() < 0)
             {
                 bezierPath.GetNextId(ref curFragId, ref curSampleId, -1);
             }
@@ -179,15 +186,29 @@ public class BezierPathMover : MonoBehaviour
             transform.rotation = Quaternion.Euler(rotInEuler);
 
             m_elapsedTime += Time.deltaTime;
-            
-            // Update speed based on curve
-            if (referenceSpeedInSecond > 0)
-            {
-                float interval = 1f / bezierPath.Fragments.Count;
 
-                speedInSecond =
-                    referenceSpeedInSecond 
-                    * speedCurve.Evaluate(interval * (curFragId + offsetLength));
+            // Update speed based on curve
+            if (mode == MoveMode.NodeBased)
+            {
+                if (referenceSpeedInSecond > 0)
+                {
+                    float interval = 1f / bezierPath.Fragments.Count;
+
+                    speedInSecond =
+                        referenceSpeedInSecond
+                        * speedCurve.Evaluate(interval * (curFragId + offsetLength));
+                }
+            }
+            else if (mode == MoveMode.DurationBased)
+            {
+                if (referenceSpeedInSecond > 0)
+                {
+                    float interval = 1f / bezierPath.Fragments.Count;
+
+                    speedInSecond =
+                        referenceSpeedInSecond
+                        * speedCurve.Evaluate((m_elapsedTime % duration) / duration);
+                }
             }
 
             yield return null;

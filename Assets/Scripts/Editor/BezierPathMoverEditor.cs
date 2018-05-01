@@ -22,12 +22,21 @@ public class BezierPathMoverEditor : Editor
         }
     }
 
+    #region Serialized Properties
+
+    private SerializedObject serializedTarget;
+    private SerializedProperty modeProperty;
+
+    #endregion Serialized Properties
+
     #region Inbuilt APIs
     void OnEnable()
     {
         EditorApplication.update += Update;
 
         if (Target == null) return;
+
+        GetTargetProperties();
 
         InitKeyframes();
     }
@@ -37,41 +46,60 @@ public class BezierPathMoverEditor : Editor
         EditorApplication.update -= Update;
     }
 
+    public override void OnInspectorGUI()
+    {
+        serializedTarget.Update();
+
+        serializedTarget.ApplyModifiedProperties();
+        base.OnInspectorGUI();
+    }
+
     void OnSceneGUI()
     {
-
-        int keyFrameNum = Target.bezierPath.Points.Count + (Target.bezierPath.isAutoConnect ? 1 : 0);
-        //Debug.Log("points " + keyFrameNum);
-
-        float interval = 1f / (keyFrameNum - 1);
-        if (Target.speedCurve.keys.Length < keyFrameNum)
+        if (modeProperty.enumValueIndex == (int)BezierPathMover.MoveMode.NodeBased)
         {
-            for (int i = 0; i < Target.speedCurve.keys.Length; ++i)
+            int keyFrameNum = Target.bezierPath.Points.Count + (Target.bezierPath.isAutoConnect ? 1 : 0);
+            //Debug.Log("points " + keyFrameNum);
+
+            float interval = 1f / (keyFrameNum - 1);
+            if (Target.speedCurve.keys.Length < keyFrameNum)
             {
-                Keyframe keyframe = Target.speedCurve[i];
-                keyframe.time = i * interval;
-                Target.speedCurve.MoveKey(i, keyframe);
+                for (int i = 0; i < Target.speedCurve.keys.Length; ++i)
+                {
+                    Keyframe keyframe = Target.speedCurve[i];
+                    keyframe.time = i * interval;
+                    Target.speedCurve.MoveKey(i, keyframe);
+                }
+
+                for (int i = Target.speedCurve.keys.Length; i < keyFrameNum; ++i)
+                {
+                    Target.speedCurve.AddKey(i * interval, 1);
+                }
+            }
+            else if (Target.speedCurve.keys.Length > keyFrameNum)
+            {
+                for (int i = Target.speedCurve.keys.Length - 1; i > keyFrameNum - 1; --i)
+                {
+                    Target.speedCurve.RemoveKey(i);
+                }
             }
 
-            for (int i = Target.speedCurve.keys.Length; i < keyFrameNum; ++i)
+            // Align the last keyframe with the first one since they are the same point
+            if (Target.bezierPath.isAutoConnect)
             {
-                Target.speedCurve.AddKey(i * interval, 1);
+                Keyframe keyframe = Target.speedCurve[keyFrameNum - 1];
+                keyframe.value = Target.speedCurve[0].value;
+                Target.speedCurve.MoveKey(keyFrameNum - 1, keyframe);
             }
         }
-        else if (Target.speedCurve.keys.Length > keyFrameNum)
+        else if (modeProperty.enumValueIndex == (int)BezierPathMover.MoveMode.DurationBased)
         {
-            for (int i = Target.speedCurve.keys.Length - 1; i > keyFrameNum - 1; --i)
+            if (Target.speedCurve[Target.speedCurve.length - 1].time != 1)
             {
-                Target.speedCurve.RemoveKey(i);
+                Keyframe keyframe = Target.speedCurve[Target.speedCurve.length - 1];
+                keyframe.time = 1;
+                Target.speedCurve.MoveKey(Target.speedCurve.length - 1, keyframe);
             }
-        }
-
-        // Align the last keyframe with the first one since they are the same point
-        if(Target.bezierPath.isAutoConnect)
-        {
-            Keyframe keyframe = Target.speedCurve[keyFrameNum - 1];
-            keyframe.value = Target.speedCurve[0].value;
-            Target.speedCurve.MoveKey(keyFrameNum - 1, keyframe);
         }
     }
 
@@ -88,4 +116,10 @@ public class BezierPathMoverEditor : Editor
     }
 
     #endregion Inbuilt APIs
+
+    void GetTargetProperties()
+    {
+        serializedTarget = new SerializedObject(Target);
+        modeProperty = serializedTarget.FindProperty("mode");
+    }
 }
