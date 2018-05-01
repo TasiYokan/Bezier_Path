@@ -13,10 +13,10 @@ public class BezierPathMover : MonoBehaviour
 
     public MoveMode mode;
     public BezierCurve bezierPath;
-    public float speedInSecond;
-    public float referenceSpeedInSecond;
+    public float actualVelocity;
+    public float referenceVelocity;
     public bool alwaysForward = false;
-    public AnimationCurve speedCurve;
+    public AnimationCurve velocityCurve;
     /// <summary>
     /// Have bugs sometime, still in alpha phase
     /// </summary>
@@ -26,7 +26,7 @@ public class BezierPathMover : MonoBehaviour
     /// </summary>
     public bool alwaysUpdateCurrentFrag;
     /// <summary>
-    /// If greater than 0, will overwirte <see cref="speedInSecond"/>
+    /// If greater than 0, will overwirte <see cref="actualVelocity"/>
     /// </summary>
     public float duration = -1;
     private int m_curFragId = 0;
@@ -63,11 +63,11 @@ public class BezierPathMover : MonoBehaviour
         // For debug
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            speedInSecond *= 1.01f;
+            actualVelocity *= 1.01f;
         }
         else if (Input.GetKey(KeyCode.DownArrow))
         {
-            speedInSecond *= 0.99f;
+            actualVelocity *= 0.99f;
         }
         //speed = Mathf.Max(0, speed);
     }
@@ -92,11 +92,11 @@ public class BezierPathMover : MonoBehaviour
         //print("Start time: " + Time.time);
         if (duration > 0)
         {
-            speedInSecond = bezierPath.totalLength / duration;
-            referenceSpeedInSecond = speedInSecond;
+            actualVelocity = bezierPath.totalLength / duration;
+            referenceVelocity = actualVelocity;
         }
 
-        m_dirSgn = speedInSecond.Sgn();
+        m_dirSgn = actualVelocity.Sgn();
 
         while (true)
         {
@@ -106,7 +106,7 @@ public class BezierPathMover : MonoBehaviour
             //    m_curSampleId = bezierPath.Fragments[m_curFragId].FindNearestSampleOnFrag(transform.position, ref m_offset);
 
             // Should switch the back and front sample point of this mover
-            if (m_dirSgn * speedInSecond.Sgn() < 0)
+            if (m_dirSgn * actualVelocity.Sgn() < 0)
             {
                 // These are next ids
                 int oldFragId = m_curFragId;
@@ -117,11 +117,11 @@ public class BezierPathMover : MonoBehaviour
                     - bezierPath.GetSamplePos(oldFragId, oldSampleId);
                 // Update offset after switching base
                 m_offset = m_offset - oldToNew;
-                m_dirSgn = speedInSecond.Sgn();
+                m_dirSgn = actualVelocity.Sgn();
             }
 
             int prevId = m_curFragId;
-            bezierPath.GetCurvePos(ref m_curFragId, ref m_curSampleId, speedInSecond * Time.deltaTime, ref m_offset);
+            bezierPath.GetCurvePos(ref m_curFragId, ref m_curSampleId, actualVelocity * Time.deltaTime, ref m_offset);
 
             if (m_curFragId != prevId)
             {
@@ -148,7 +148,7 @@ public class BezierPathMover : MonoBehaviour
             //transform.LookAt(bezierPath.GetNextSamplePosAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn()));
             int curFragId = m_curFragId;
             int curSampleId = m_curSampleId;
-            if (alwaysForward == true && speedInSecond.Sgn() < 0)
+            if (alwaysForward == true && actualVelocity.Sgn() < 0)
             {
                 bezierPath.GetNextId(ref curFragId, ref curSampleId, -1);
             }
@@ -170,7 +170,7 @@ public class BezierPathMover : MonoBehaviour
             Vector3 transVector = this.transform.position - bezierPath.Points[curFragId].Position;
             float offsetLength = Vector3.Dot(curFragVector, transVector) / curFragVector.sqrMagnitude;
             transform.forward = bezierPath.Fragments[m_curFragId].CalculateCubicBezierVelocity(offsetLength)
-                * (alwaysForward ? 1 : speedInSecond.Sgn());
+                * (alwaysForward ? 1 : actualVelocity.Sgn());
 
             Vector3 rotInEuler = transform.rotation.eulerAngles;
             rotInEuler = new Vector3(
@@ -190,24 +190,24 @@ public class BezierPathMover : MonoBehaviour
             // Update speed based on curve
             if (mode == MoveMode.NodeBased)
             {
-                if (referenceSpeedInSecond > 0)
+                if (referenceVelocity > 0)
                 {
                     float interval = 1f / bezierPath.Fragments.Count;
 
-                    speedInSecond =
-                        referenceSpeedInSecond
-                        * speedCurve.Evaluate(interval * (curFragId + offsetLength));
+                    actualVelocity =
+                        referenceVelocity
+                        * velocityCurve.Evaluate(interval * (curFragId + offsetLength));
                 }
             }
             else if (mode == MoveMode.DurationBased)
             {
-                if (referenceSpeedInSecond > 0)
+                if (referenceVelocity > 0)
                 {
                     float interval = 1f / bezierPath.Fragments.Count;
 
-                    speedInSecond =
-                        referenceSpeedInSecond
-                        * speedCurve.Evaluate((m_elapsedTime % duration) / duration);
+                    actualVelocity =
+                        referenceVelocity
+                        * velocityCurve.Evaluate((m_elapsedTime % duration) / duration);
                 }
             }
 
