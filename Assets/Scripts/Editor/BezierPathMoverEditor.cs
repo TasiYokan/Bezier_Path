@@ -22,20 +22,12 @@ public class BezierPathMoverEditor : Editor
             return m_target;
         }
     }
-
-    AnimationCurve speedCurve;
     #endregion Editor Variable
 
     #region Serialized Properties
 
     private SerializedObject serializedTarget;
-    private SerializedProperty modeProperty;
-    private SerializedProperty durationProperty;
-    private SerializedProperty referenceVelocityProperty;
-    private SerializedProperty bezierPathProperty;
-    private SerializedProperty alwaysForwardProperty;
-    private SerializedProperty alwaysUpdateCurrentFragProperty;
-    private SerializedProperty rotationConstrainProperty;
+    private SerializedProperty onEndCallbackProperty;
 
     #endregion Serialized Properties
 
@@ -59,16 +51,13 @@ public class BezierPathMoverEditor : Editor
     public override void OnInspectorGUI()
     {
         serializedTarget.Update();
-
-        //Target.speedCurve = EditorGUILayout.CurveField(speedCurve, GUILayout.Width(Screen.width / 3f));
         DrawProperties();
         serializedTarget.ApplyModifiedProperties();
-        base.OnInspectorGUI();
     }
 
     void OnSceneGUI()
     {
-        if (modeProperty.enumValueIndex == (int)BezierPathMover.MoveMode.NodeBased)
+        if (Target.mode == BezierPathMover.MoveMode.NodeBased)
         {
             int keyFrameNum = Target.bezierPath.Points.Count + (Target.bezierPath.isAutoConnect ? 1 : 0);
             //Debug.Log("points " + keyFrameNum);
@@ -104,7 +93,7 @@ public class BezierPathMoverEditor : Editor
                 Target.velocityCurve.MoveKey(keyFrameNum - 1, keyframe);
             }
         }
-        else if (modeProperty.enumValueIndex == (int)BezierPathMover.MoveMode.DurationBased)
+        else if (Target.mode == BezierPathMover.MoveMode.DurationBased)
         {
             if (Target.velocityCurve[Target.velocityCurve.length - 1].time != 1)
             {
@@ -132,24 +121,31 @@ public class BezierPathMoverEditor : Editor
     void GetTargetProperties()
     {
         serializedTarget = new SerializedObject(Target);
-        modeProperty = serializedTarget.FindProperty("mode");
-        durationProperty = serializedTarget.FindProperty("duration");
-        referenceVelocityProperty = serializedObject.FindProperty("referenceVelocity");
-        alwaysForwardProperty = serializedObject.FindProperty("alwaysForward");
-        alwaysUpdateCurrentFragProperty = serializedObject.FindProperty("alwaysUpdateCurrentFrag");
-        rotationConstrainProperty = serializedObject.FindProperty("rotationConstrain");
+        onEndCallbackProperty = serializedTarget.FindProperty("onEndCallback");
     }
 
     void DrawProperties()
     {
-        modeProperty.enumValueIndex = Convert.ToInt32(EditorGUILayout.EnumPopup(
-            "Mode to manipulate node", (BezierPathMover.MoveMode)modeProperty.enumValueIndex));
-
-        durationProperty.floatValue = EditorGUILayout.FloatField("Duration: ", durationProperty.floatValue);
-        referenceVelocityProperty.floatValue = EditorGUILayout.FloatField("Reference Velocity: ", referenceVelocityProperty.floatValue);
-        EditorGUILayout.FloatField("Actual Velocity: ", Target.actualVelocity);
-        alwaysForwardProperty.boolValue = EditorGUILayout.Toggle("Always forward", alwaysForwardProperty.boolValue);
-        alwaysUpdateCurrentFragProperty.boolValue = EditorGUILayout.Toggle("Always update current frag", alwaysUpdateCurrentFragProperty.boolValue);
-        rotationConstrainProperty.vector3Value = EditorGUILayout.Vector3Field("Rotation constrain", rotationConstrainProperty.vector3Value);
+        Target.bezierPath = (BezierCurve)EditorGUILayout.ObjectField(
+            "Path", Target.bezierPath, typeof(BezierCurve), true);
+        Target.mode = (BezierPathMover.MoveMode)EditorGUILayout.EnumPopup(
+            "Mode to manipulate node", Target.mode);
+        Target.duration = EditorGUILayout.FloatField(
+            "Duration: ", Target.duration);
+        Target.velocityCurve = EditorGUILayout.CurveField(
+            "Velocity Curve", Target.velocityCurve);
+        Target.referenceVelocity = EditorGUILayout.FloatField(
+            "Reference Velocity: ", Target.referenceVelocity);
+        EditorGUILayout.FloatField(
+            "Actual Velocity: ", Target.actualVelocity);
+        Target.alwaysForward = EditorGUILayout.Toggle(
+            "Always forward", Target.alwaysForward);
+        Target.alwaysUpdateCurrentFrag = EditorGUILayout.Toggle(
+            "Always update current frag", Target.alwaysUpdateCurrentFrag);
+        Target.rotationConstrain = EditorGUILayout.Vector3Field(
+            "Rotation constrain", Target.rotationConstrain);
+        Target.keepSteadicamStable = EditorGUILayout.Toggle(
+            "Keep Steadicam Stable", Target.keepSteadicamStable);
+        EditorGUILayout.PropertyField(onEndCallbackProperty, new GUIContent("List Callbacks", ""));
     }
 }
