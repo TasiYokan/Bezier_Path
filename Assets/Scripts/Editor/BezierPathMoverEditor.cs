@@ -95,6 +95,7 @@ public class BezierPathMoverEditor : Editor
         }
         else if (Target.mode == BezierPathMover.MoveMode.DurationBased)
         {
+
             if (Target.velocityCurve[Target.velocityCurve.length - 1].time != 1)
             {
                 Keyframe keyframe = Target.velocityCurve[Target.velocityCurve.length - 1];
@@ -126,16 +127,40 @@ public class BezierPathMoverEditor : Editor
 
     void DrawProperties()
     {
+        EditorGUI.BeginChangeCheck();
         Target.bezierPath = (BezierCurve)EditorGUILayout.ObjectField(
             "Path", Target.bezierPath, typeof(BezierCurve), true);
         Target.mode = (BezierPathMover.MoveMode)EditorGUILayout.EnumPopup(
             "Mode to manipulate node", Target.mode);
-        Target.duration = EditorGUILayout.FloatField(
-            "Duration: ", Target.duration);
         Target.velocityCurve = EditorGUILayout.CurveField(
             "Velocity Curve", Target.velocityCurve);
-        Target.referenceVelocity = EditorGUILayout.FloatField(
-            "Reference Velocity: ", Target.referenceVelocity);
+        if (Target.mode == BezierPathMover.MoveMode.DurationBased)
+        {
+            Target.duration = EditorGUILayout.FloatField(
+                "Duration: ", Target.duration);
+            EditorGUILayout.FloatField(
+                "(Readonly) Ref Vel: ", Target.referenceVelocity);
+        }
+        else if (Target.mode == BezierPathMover.MoveMode.NodeBased)
+        {
+            Target.referenceVelocity = EditorGUILayout.FloatField(
+                "Reference Velocity: ", Target.referenceVelocity);
+        }
+        if (EditorGUI.EndChangeCheck())
+        {
+            //Debug.Log("Has changed something!");
+            if (Target.mode == BezierPathMover.MoveMode.DurationBased)
+            {
+                Target.bezierPath.InitFragmentsFromPoints();
+                Target.bezierPath.ForceUpdateAllFrags();
+                float sum_dist = IntegrateCurve(Target.velocityCurve, 0, 1, 100);
+                if (sum_dist < 0)
+                    Debug.Log("The destination couldn't be reached since the integral of speed is less than 0!");
+                else
+                    Target.referenceVelocity = Target.bezierPath.totalLength / (sum_dist * Target.duration);
+                Debug.Log("sum dist " + sum_dist + " total length: " + Target.bezierPath.totalLength);
+            }
+        }
         EditorGUILayout.FloatField(
             "Actual Velocity: ", Target.actualVelocity);
         Target.alwaysForward = EditorGUILayout.Toggle(
@@ -147,5 +172,23 @@ public class BezierPathMoverEditor : Editor
         Target.keepSteadicamStable = EditorGUILayout.Toggle(
             "Keep Steadicam Stable", Target.keepSteadicamStable);
         EditorGUILayout.PropertyField(onEndCallbackProperty, new GUIContent("List Callbacks", ""));
+    }
+
+    // Integrate area under AnimationCurve between start and end time
+    public static float IntegrateCurve(AnimationCurve _curve, float _startTime, float _endTime, int _steps)
+    {
+        return Integrate(_curve.Evaluate, _startTime, _endTime, _steps);
+    }
+
+    // Integrate function f(x) using the trapezoidal rule between x=x_low..x_high
+    public static float Integrate(Func<float, float> _evaFunc, float _xMin, float _xMax, int _steps)
+    {
+        float h = (_xMax - _xMin) / _steps;
+        float res = (_evaFunc(_xMin) + _evaFunc(_xMax)) / 2;
+        for (int i = 1; i < _steps; i++)
+        {
+            res += _evaFunc(_xMin + i * h);
+        }
+        return h * res;
     }
 }

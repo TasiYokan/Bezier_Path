@@ -84,17 +84,18 @@ public class BezierPathMover : MonoBehaviour
         m_curSampleId = 0;
         m_dirSgn = 0;
         m_offset = Vector3.zero;
+        m_elapsedTime = 0;
 
         bezierPath.UpdateAnchorTransforms();
         bezierPath.ForceUpdateAllFrags();
         bezierPath.InitFragmentsFromPoints();
 
         //print("Start time: " + Time.time);
-        if (duration > 0)
-        {
-            actualVelocity = bezierPath.totalLength / duration;
-            referenceVelocity = actualVelocity;
-        }
+        //if (duration > 0)
+        //{
+        //    actualVelocity = bezierPath.totalLength / duration;
+        //    referenceVelocity = actualVelocity;
+        //}
 
         m_dirSgn = actualVelocity.Sgn();
 
@@ -132,7 +133,7 @@ public class BezierPathMover : MonoBehaviour
             if (m_curFragId < 0 || m_curFragId >= bezierPath.Fragments.Count
                 || bezierPath.Fragments[m_curFragId].SampleIdWithinFragment(m_curSampleId) == false)
             {
-                print("Has reached end");
+                print("Has reached end with time: " + m_elapsedTime);
                 //print("Finish time: " + Time.time);
                 if (onEndCallback != null)
                     onEndCallback.Invoke();
