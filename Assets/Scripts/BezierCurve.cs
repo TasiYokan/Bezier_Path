@@ -8,17 +8,19 @@ using UnityEditor;
 
 public class BezierCurve : MonoBehaviour
 {
-    public List<BezierPoint> Points;
-    private List<BezierFragment> m_fragments;
+    #region Fields
 
+    public List<BezierPoint> Points;
     public bool isAutoConnect;
+    public int totalSampleCount = 10;
+    public bool drawDebugPath;
+    public float totalLength;
+    private List<BezierFragment> m_fragments;
     private LineRenderer m_lineRenderer;
 
-    public int totalSampleCount = 10;
+    #endregion Fields
 
-    public bool drawDebugPath;
-
-    public float totalLength;
+    #region Properties
 
     public List<BezierFragment> Fragments
     {
@@ -28,12 +30,9 @@ public class BezierCurve : MonoBehaviour
         }
     }
 
-    void Awake()
-    {
-        m_lineRenderer = GetComponent<LineRenderer>();
+    #endregion Properties
 
-        InitFragmentsFromPoints();
-    }
+    #region Methods
 
     public void AddPoint(BezierPoint _point)
     {
@@ -67,14 +66,6 @@ public class BezierCurve : MonoBehaviour
             totalLength += frag.Length;
         }
         //print("Total length: " + totalLength);
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (drawDebugPath)
-            DrawDebugCurve();
-        //ForceUpdateFrags();
     }
 
     /// <summary>
@@ -271,6 +262,34 @@ public class BezierCurve : MonoBehaviour
         return totalPos;
     }
 
+    public void ForceUpdateOneFrag(int _fragId)
+    {
+        m_fragments[_fragId].UpdateSamplePos();
+        m_fragments[(_fragId + m_fragments.Count - 1) % m_fragments.Count].UpdateSamplePos();
+        m_fragments[(_fragId + m_fragments.Count + 1) % m_fragments.Count].UpdateSamplePos();
+    }
+
+    public void UpdateAllPointPoses()
+    {
+        foreach (BezierPoint point in Points)
+        {
+            point.UpdatePosition();
+        }
+    }
+
+    void Awake()
+    {
+        m_lineRenderer = GetComponent<LineRenderer>();
+
+        InitFragmentsFromPoints();
+    }
+    // Update is called once per frame
+    void Update()
+    {
+        if (drawDebugPath)
+            DrawDebugCurve();
+        //ForceUpdateFrags();
+    }
     private int GetTotalSampleCount()
     {
         int totalPos = 1;
@@ -280,14 +299,6 @@ public class BezierCurve : MonoBehaviour
         }
         return totalPos;
     }
-
-    public void ForceUpdateOneFrag(int _fragId)
-    {
-        m_fragments[_fragId].UpdateSamplePos();
-        m_fragments[(_fragId + m_fragments.Count - 1) % m_fragments.Count].UpdateSamplePos();
-        m_fragments[(_fragId + m_fragments.Count + 1) % m_fragments.Count].UpdateSamplePos();
-    }
-
     private void DrawDebugCurve()
     {
         int totalPos = GetTotalSampleCount();
@@ -306,14 +317,6 @@ public class BezierCurve : MonoBehaviour
 
         List<Vector3> lastFragPoses = m_fragments[m_fragments.Count - 1].SamplePos;
         m_lineRenderer.SetPosition(totalPos - 1, lastFragPoses[lastFragPoses.Count - 1]);
-    }
-
-    public void UpdateAllPointPoses()
-    {
-        foreach (BezierPoint point in Points)
-        {
-            point.UpdatePosition();
-        }
     }
 
 #if UNITY_EDITOR
@@ -354,4 +357,6 @@ public class BezierCurve : MonoBehaviour
         }
     }
 #endif
+
+    #endregion Methods
 }

@@ -8,12 +8,32 @@ using UnityEngine.Assertions;
 /// </summary>
 public class BezierFragment
 {
+    #region Fields
+
     public BezierPoint startPoint;
     public BezierPoint endPoint;
 
     private int m_initSampleCount;
     private List<Vector3> m_samplePoses;
     private float m_length;
+
+    #endregion Fields
+
+    #region Constructors
+
+    public BezierFragment(BezierPoint _start, BezierPoint _end, int _sampleCount = 10)
+    {
+        startPoint = _start;
+        endPoint = _end;
+        m_initSampleCount = _sampleCount;
+
+        SamplePos = new List<Vector3>();
+        UpdateSamplePos();
+    }
+
+    #endregion Constructors
+
+    #region Properties
 
     public List<Vector3> SamplePos
     {
@@ -57,15 +77,9 @@ public class BezierFragment
         }
     }
 
-    public BezierFragment(BezierPoint _start, BezierPoint _end, int _sampleCount = 10)
-    {
-        startPoint = _start;
-        endPoint = _end;
-        m_initSampleCount = _sampleCount;
+    #endregion Properties
 
-        SamplePos = new List<Vector3>();
-        UpdateSamplePos();
-    }
+    #region Methods
 
     public void UpdateSamplePos()
     {
@@ -80,22 +94,6 @@ public class BezierFragment
 
             SamplePos.Add(pos);
         }
-    }
-
-    private Vector3 CalculateCubicBezierPos(float _t)
-    {
-        float u = 1 - _t;
-        float t2 = _t * _t;
-        float u2 = u * u;
-        float u3 = u2 * u;
-        float t3 = t2 * _t;
-
-        Vector3 p = u3 * startPoint.Position
-            + t3 * endPoint.Position
-            + 3 * u2 * _t * startPoint.GetHandle(0).Position
-            + 3 * u * t2 * endPoint.GetHandle(1).Position;
-
-        return p;
     }
 
     public Vector3 CalculateCubicBezierVelocity(float _t)
@@ -180,4 +178,22 @@ public class BezierFragment
 
         return nearestSampleId;
     }
+
+    private Vector3 CalculateCubicBezierPos(float _t)
+    {
+        float u = 1 - _t;
+        float t2 = _t * _t;
+        float u2 = u * u;
+        float u3 = u2 * u;
+        float t3 = t2 * _t;
+
+        Vector3 p = u3 * startPoint.Position
+            + t3 * endPoint.Position
+            + 3 * u2 * _t * startPoint.GetHandle(0).Position
+            + 3 * u * t2 * endPoint.GetHandle(1).Position;
+
+        return p;
+    }
+
+    #endregion Methods
 }

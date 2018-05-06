@@ -5,6 +5,8 @@ using UnityEngine.Serialization;
 [System.Serializable]
 public class BezierPoint
 {
+    #region Fields
+
     private int activeHandleId = 1;
     
     [SerializeField]
@@ -20,6 +22,35 @@ public class BezierPoint
 
     [SerializeField]
     private bool m_isAutoSmooth;
+
+    #endregion Fields
+
+    #region Constructors
+
+    /// <summary>
+    /// Avoid misset values when deserializing.
+    /// Only used when click add point button or create one in game.
+    /// </summary>
+    /// <param name="_isFirstTime"></param>
+    public BezierPoint(Vector3 _localPos, Quaternion _localRot, bool _isFirstTime = true)
+    {
+        if (_isFirstTime == false)
+            return;
+
+        m_localPosition = _localPos;
+        m_localRotation = _localRot;
+
+        m_handles[0] = new BezierHandle();
+        m_handles[1] = new BezierHandle();
+
+        // TODO: Based on its rotation
+        SetHandleLocalPosition(0, Vector3.forward);
+        SetHandleLocalPosition(1, Vector3.back);
+    }
+
+    #endregion Constructors
+
+    #region Properties
 
     public bool IsAutoSmooth
     {
@@ -87,26 +118,9 @@ public class BezierPoint
         }
     }
 
-    /// <summary>
-    /// Avoid misset values when deserializing.
-    /// Only used when click add point button or create one in game.
-    /// </summary>
-    /// <param name="_isFirstTime"></param>
-    public BezierPoint(Vector3 _localPos, Quaternion _localRot, bool _isFirstTime = true)
-    {
-        if (_isFirstTime == false)
-            return;
+    #endregion Properties
 
-        m_localPosition = _localPos;
-        m_localRotation = _localRot;
-
-        m_handles[0] = new BezierHandle();
-        m_handles[1] = new BezierHandle();
-
-        // TODO: Based on its rotation
-        SetHandleLocalPosition(0, Vector3.forward);
-        SetHandleLocalPosition(1, Vector3.back);
-    }
+    #region Methods
 
     /// <summary>
     /// Update handles' position based on their localPosition
@@ -145,6 +159,14 @@ public class BezierPoint
         }
     }
 
+    public void UpdatePosition()
+    {
+        if (IsAutoSmooth)
+        {
+            SmoothHandle(activeHandleId == 0);
+        }
+    }
+
     /// <summary>
     /// Adjsut secondary handle to the opposite postion of primary one.
     /// </summary>
@@ -155,11 +177,5 @@ public class BezierPoint
         m_handles[1 - refId].Position = 2 * Position - m_handles[refId].Position;
     }
 
-    public void UpdatePosition()
-    {
-        if (IsAutoSmooth)
-        {
-            SmoothHandle(activeHandleId == 0);
-        }
-    }
+    #endregion Methods
 }
