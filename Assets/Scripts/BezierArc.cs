@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using UnityEngine.Assertions;
 
 /// <summary>
-/// Single fragment curve with 2 points which consists the whole curve
+/// Single arc curve with 2 points which consists the whole curve
 /// </summary>
-public class BezierFragment
+public class BezierArc
 {
     #region Fields
 
@@ -21,7 +21,7 @@ public class BezierFragment
 
     #region Constructors
 
-    public BezierFragment(BezierPoint _start, BezierPoint _end, int _sampleCount = 10)
+    public BezierArc(BezierPoint _start, BezierPoint _end, int _sampleCount = 10)
     {
         startPoint = _start;
         endPoint = _end;
@@ -126,7 +126,7 @@ public class BezierFragment
         {
             previousDistance = totalDistance;
 
-            if (SampleIdWithinFragment(curId + step))
+            if (SampleIdWithinArc(curId + step))
             {
                 totalDistance += GetSampleVector(curId, step).magnitude;
             }
@@ -145,24 +145,24 @@ public class BezierFragment
 
     public Vector3 GetSampleVector(int _id, int _step)
     {
-        Assert.IsTrue(SampleIdWithinFragment(_id + _step));
+        Assert.IsTrue(SampleIdWithinArc(_id + _step));
 
         return m_samplePoses[_id + _step] - m_samplePoses[_id];
     }
 
     public Vector3 GetNextSamplePos(int _id, int _step)
     {
-        Assert.IsTrue(SampleIdWithinFragment(_id + _step));
+        Assert.IsTrue(SampleIdWithinArc(_id + _step));
 
         return m_samplePoses[_id + _step];
     }
 
-    public bool SampleIdWithinFragment(int _id)
+    public bool SampleIdWithinArc(int _id)
     {
         return _id >= 0 && _id < m_samplePoses.Count;
     }
 
-    public int FindNearestSampleOnFrag(Vector3 _pos, ref Vector3 _offset)
+    public int FindNearestSampleOnArc(Vector3 _pos, ref Vector3 _offset)
     {
         int nearestSampleId = 0;
         float shortestDist = (_pos - m_samplePoses[nearestSampleId]).sqrMagnitude;

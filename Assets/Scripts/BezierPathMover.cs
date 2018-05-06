@@ -22,14 +22,14 @@ public class BezierPathMover : MonoBehaviour
     /// </summary>
     public bool keepSteadicamStable = false;
     /// <summary>
-    /// Only update the frag it is on to save some computation
+    /// Only update the arc it is on to save some computation
     /// </summary>
-    public bool alwaysUpdateCurrentFrag;
+    public bool alwaysUpdateCurrentArc;
     /// <summary>
     /// If greater than 0, will overwirte <see cref="actualVelocity"/>
     /// </summary>
     public float duration = -1;
-    private int m_curFragId = 0;
+    private int m_curArcId = 0;
     private int m_curSampleId = 0;
     // Denote the mover is moving along the order of list or not
     private int m_dirSgn = 0;
@@ -57,8 +57,8 @@ public class BezierPathMover : MonoBehaviour
         // If the offset is too tiny, we could hardly notice it actually
         //Debug.DrawLine(path.CurvePoints[curId], transform.position, Color.green);
 
-        if (alwaysUpdateCurrentFrag && m_isStopped == false)
-            bezierPath.ForceUpdateOneFrag(m_curFragId);
+        if (alwaysUpdateCurrentArc && m_isStopped == false)
+            bezierPath.ForceUpdateOneArc(m_curArcId);
 
         // For debug
         if (Input.GetKey(KeyCode.UpArrow))
@@ -80,15 +80,15 @@ public class BezierPathMover : MonoBehaviour
     private IEnumerator MoveAlongPath()
     {
         m_isStopped = false;
-        m_curFragId = 0;
+        m_curArcId = 0;
         m_curSampleId = 0;
         m_dirSgn = 0;
         m_offset = Vector3.zero;
         m_elapsedTime = 0;
 
         bezierPath.UpdateAnchorTransforms();
-        bezierPath.ForceUpdateAllFrags();
-        bezierPath.InitFragmentsFromPoints();
+        bezierPath.ForceUpdateAllArcs();
+        bezierPath.InitArcsFromPoints();
 
         //print("Start time: " + Time.time);
         //if (duration > 0)
@@ -104,34 +104,34 @@ public class BezierPathMover : MonoBehaviour
 
             // To make mover Steadicam stable
             //if (keepSteadicamStable)
-            //    m_curSampleId = bezierPath.Fragments[m_curFragId].FindNearestSampleOnFrag(transform.position, ref m_offset);
+            //    m_curSampleId = bezierPath.Arcs[m_curArcId].FindNearestSampleOnArc(transform.position, ref m_offset);
 
             // Should switch the back and front sample point of this mover
             if (m_dirSgn * actualVelocity.Sgn() < 0)
             {
                 // These are next ids
-                int oldFragId = m_curFragId;
+                int oldArcId = m_curArcId;
                 int oldSampleId = m_curSampleId;
-                bezierPath.GetNextId(ref m_curFragId, ref m_curSampleId, m_dirSgn);
+                bezierPath.GetNextId(ref m_curArcId, ref m_curSampleId, m_dirSgn);
 
-                Vector3 oldToNew = bezierPath.GetSamplePos(m_curFragId, m_curSampleId)
-                    - bezierPath.GetSamplePos(oldFragId, oldSampleId);
+                Vector3 oldToNew = bezierPath.GetSamplePos(m_curArcId, m_curSampleId)
+                    - bezierPath.GetSamplePos(oldArcId, oldSampleId);
                 // Update offset after switching base
                 m_offset = m_offset - oldToNew;
                 m_dirSgn = actualVelocity.Sgn();
             }
 
-            int prevId = m_curFragId;
-            bezierPath.GetCurvePos(ref m_curFragId, ref m_curSampleId, actualVelocity * Time.deltaTime, ref m_offset);
+            int prevId = m_curArcId;
+            bezierPath.GetCurvePos(ref m_curArcId, ref m_curSampleId, actualVelocity * Time.deltaTime, ref m_offset);
 
-            if (m_curFragId != prevId)
+            if (m_curArcId != prevId)
             {
                 if (onEveryNodeComplete != null)
-                    onEveryNodeComplete(m_curFragId);
+                    onEveryNodeComplete(m_curArcId);
             }
 
-            if (m_curFragId < 0 || m_curFragId >= bezierPath.Fragments.Count
-                || bezierPath.Fragments[m_curFragId].SampleIdWithinFragment(m_curSampleId) == false)
+            if (m_curArcId < 0 || m_curArcId >= bezierPath.Arcs.Count
+                || bezierPath.Arcs[m_curArcId].SampleIdWithinArc(m_curSampleId) == false)
             {
                 print("Has reached end with time: " + m_elapsedTime);
                 //print("Finish time: " + Time.time);
@@ -143,34 +143,34 @@ public class BezierPathMover : MonoBehaviour
             }
 
             transform.position =
-                bezierPath.Fragments[m_curFragId].SamplePos[m_curSampleId] + m_offset;
+                bezierPath.Arcs[m_curArcId].SamplePos[m_curSampleId] + m_offset;
 
-            //transform.forward = bezierPath.GetSampleVectorAmongAllFrags(m_curFragId, m_curSampleId, speedInSecond.Sgn());
-            //transform.LookAt(bezierPath.GetNextSamplePosAmongAllFrags(m_curFragId, m_curSampleId, speed.Sgn()));
-            int curFragId = m_curFragId;
+            //transform.forward = bezierPath.GetSampleVectorAmongAllArcs(m_curArcId, m_curSampleId, speedInSecond.Sgn());
+            //transform.LookAt(bezierPath.GetNextSamplePosAmongAllArcs(m_curArcId, m_curSampleId, speed.Sgn()));
+            int curArcId = m_curArcId;
             int curSampleId = m_curSampleId;
             if (alwaysForward == true && actualVelocity.Sgn() < 0)
             {
-                bezierPath.GetNextId(ref curFragId, ref curSampleId, -1);
+                bezierPath.GetNextId(ref curArcId, ref curSampleId, -1);
             }
-            int nextFragId = curFragId;
+            int nextArcId = curArcId;
             if (bezierPath.isAutoConnect)
             {
-                // Find connected frag
-                nextFragId = (nextFragId + 1 + bezierPath.Fragments.Count) % bezierPath.Fragments.Count;
+                // Find connected arc
+                nextArcId = (nextArcId + 1 + bezierPath.Arcs.Count) % bezierPath.Arcs.Count;
             }
             else
             {
-                nextFragId = Mathf.Clamp(nextFragId + 1, 0, bezierPath.Points.Count - 1);
+                nextArcId = Mathf.Clamp(nextArcId + 1, 0, bezierPath.Points.Count - 1);
             }
 
             //transform.forward = Vector3.Lerp(transform.forward,
-            //    bezierPath.GetSampleVectorAmongAllFrags(curFragId, curSampleId, alwaysForward ? 1 : speedInSecond.Sgn()),
+            //    bezierPath.GetSampleVectorAmongAllArcs(curArcId, curSampleId, alwaysForward ? 1 : speedInSecond.Sgn()),
             //    Mathf.Abs(speedInSecond) * 1 * Time.deltaTime);
-            Vector3 curFragVector = bezierPath.Points[nextFragId].Position - bezierPath.Points[curFragId].Position;
-            Vector3 transVector = this.transform.position - bezierPath.Points[curFragId].Position;
-            float offsetLength = Vector3.Dot(curFragVector, transVector) / curFragVector.sqrMagnitude;
-            transform.forward = bezierPath.Fragments[m_curFragId].CalculateCubicBezierVelocity(offsetLength)
+            Vector3 curArcVector = bezierPath.Points[nextArcId].Position - bezierPath.Points[curArcId].Position;
+            Vector3 transVector = this.transform.position - bezierPath.Points[curArcId].Position;
+            float offsetLength = Vector3.Dot(curArcVector, transVector) / curArcVector.sqrMagnitude;
+            transform.forward = bezierPath.Arcs[m_curArcId].CalculateCubicBezierVelocity(offsetLength)
                 * (alwaysForward ? 1 : actualVelocity.Sgn());
 
             Vector3 rotInEuler = transform.rotation.eulerAngles;
@@ -193,18 +193,18 @@ public class BezierPathMover : MonoBehaviour
             {
                 if (referenceVelocity > 0)
                 {
-                    float interval = 1f / bezierPath.Fragments.Count;
+                    float interval = 1f / bezierPath.Arcs.Count;
 
                     actualVelocity =
                         referenceVelocity
-                        * velocityCurve.Evaluate(interval * (curFragId + offsetLength));
+                        * velocityCurve.Evaluate(interval * (curArcId + offsetLength));
                 }
             }
             else if (mode == MoveMode.DurationBased)
             {
                 if (referenceVelocity > 0)
                 {
-                    float interval = 1f / bezierPath.Fragments.Count;
+                    float interval = 1f / bezierPath.Arcs.Count;
 
                     actualVelocity =
                         referenceVelocity

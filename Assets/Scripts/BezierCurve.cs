@@ -15,18 +15,18 @@ public class BezierCurve : MonoBehaviour
     public int totalSampleCount = 10;
     public bool drawDebugPath;
     public float totalLength;
-    private List<BezierFragment> m_fragments;
+    private List<BezierArc> m_arcs;
     private LineRenderer m_lineRenderer;
 
     #endregion Fields
 
     #region Properties
 
-    public List<BezierFragment> Fragments
+    public List<BezierArc> Arcs
     {
         get
         {
-            return m_fragments;
+            return m_arcs;
         }
     }
 
@@ -38,32 +38,33 @@ public class BezierCurve : MonoBehaviour
     {
         Points.Add(_point);
         UpdateAnchorTransform(Points.Count - 1);
-        InitFragmentsFromPoints();
+        // TODO: Actually, only need to update the last arc
+        InitArcsFromPoints();
     }
 
     public void RemovePoint(BezierPoint _point)
     {
         Points.Remove(_point);
-        InitFragmentsFromPoints();
+        InitArcsFromPoints();
     }
 
-    public void InitFragmentsFromPoints()
+    public void InitArcsFromPoints()
     {
-        m_fragments = new List<BezierFragment>();
+        m_arcs = new List<BezierArc>();
         for (int i = 0; i < Points.Count - 1; i++)
         {
-            m_fragments.Add(new BezierFragment(Points[i], Points[i + 1], totalSampleCount / Points.Count));
+            m_arcs.Add(new BezierArc(Points[i], Points[i + 1], totalSampleCount / Points.Count));
         }
 
         if (isAutoConnect && Points.Count > 1)
         {
-            m_fragments.Add(new BezierFragment(Points[Points.Count - 1], Points[0], totalSampleCount / Points.Count));
+            m_arcs.Add(new BezierArc(Points[Points.Count - 1], Points[0], totalSampleCount / Points.Count));
         }
 
         totalLength = 0;
-        foreach (BezierFragment frag in m_fragments)
+        foreach (BezierArc arc in m_arcs)
         {
-            totalLength += frag.Length;
+            totalLength += arc.Length;
         }
         //print("Total length: " + totalLength);
     }
@@ -116,106 +117,106 @@ public class BezierCurve : MonoBehaviour
         Points[_id].Rotation = transform.rotation * _localRotation;
     }
 
-    public void GetCurvePos(ref int _fragId, ref int _sampleId, float _speed, ref Vector3 _offset)
+    public void GetCurvePos(ref int _arcId, ref int _sampleId, float _speed, ref Vector3 _offset)
     {
         // Get offset's projection on vector of heading. A positive value means it's on the way if you are moving with a positive speed
         float offsetLength = Vector3.Dot(
-            GetSampleVectorAmongAllFrags(_fragId, _sampleId, _speed.Sgn()).normalized * _speed.Sgn(), _offset);
+            GetSampleVectorAmongAllArcs(_arcId, _sampleId, _speed.Sgn()).normalized * _speed.Sgn(), _offset);
 
-        // It's the total movement mover should take from the startFragId and startSampleId in this frame
+        // It's the total movement mover should take from the startArcId and startSampleId in this frame
         float remainLength = _speed + offsetLength;
-        int curFragId = _fragId;
+        int curArcId = _arcId;
         int curSampleId = _sampleId;
 
         while (remainLength.Sgn() != 0)
         {
-            // Cut some of the remaining length if current fragment couldn't cover the whole length
-            curSampleId = m_fragments[curFragId].GetSampleId(
+            // Cut some of the remaining length if current arc couldn't cover the whole length
+            curSampleId = m_arcs[curArcId].GetSampleId(
                 curSampleId, ref remainLength);
 
-            // If remaining length has exceed the fragment
-            if (m_fragments[curFragId].SampleIdWithinFragment(curSampleId + remainLength.Sgn()) == false)
+            // If remaining length has exceed the arc
+            if (m_arcs[curArcId].SampleIdWithinArc(curSampleId + remainLength.Sgn()) == false)
             {
-                curFragId += remainLength.Sgn();
+                curArcId += remainLength.Sgn();
 
                 if (isAutoConnect)
-                    curFragId = (curFragId + m_fragments.Count) % m_fragments.Count;
+                    curArcId = (curArcId + m_arcs.Count) % m_arcs.Count;
 
                 curSampleId = remainLength.Sgn() > 0 ?
-                    0 : m_fragments[curFragId].SamplePos.Count - 1;
+                    0 : m_arcs[curArcId].SamplePos.Count - 1;
             }
-            // Remaining length can be finished at this fragment
+            // Remaining length can be finished at this arc
             else
             {
                 _offset = Mathf.Abs(remainLength) *
-                    m_fragments[curFragId].GetSampleVector(curSampleId, remainLength.Sgn()).normalized;
+                    m_arcs[curArcId].GetSampleVector(curSampleId, remainLength.Sgn()).normalized;
                 remainLength = 0;
             }
 
-            if (curFragId < 0 || curFragId >= m_fragments.Count)
+            if (curArcId < 0 || curArcId >= m_arcs.Count)
                 break;
         }
 
-        _fragId = curFragId;
+        _arcId = curArcId;
         _sampleId = curSampleId;
     }
 
-    public Vector3 GetSamplePos(int _fragId, int _sampleId)
+    public Vector3 GetSamplePos(int _arcId, int _sampleId)
     {
-        return Fragments[_fragId].SamplePos[_sampleId];
+        return Arcs[_arcId].SamplePos[_sampleId];
     }
 
     /// <summary>
     /// Find a sample point's vector even it's on the boundary
     /// </summary>
-    /// <param name="_fragId"></param>
+    /// <param name="_arcId"></param>
     /// <param name="_sampleId"></param>
     /// <param name="_step"></param>
     /// <returns></returns>
-    public Vector3 GetSampleVectorAmongAllFrags(int _fragId, int _sampleId, int _step)
+    public Vector3 GetSampleVectorAmongAllArcs(int _arcId, int _sampleId, int _step)
     {
-        int fragId = _fragId;
+        int arcId = _arcId;
         int sampleId = _sampleId;
 
-        if (m_fragments[fragId].SampleIdWithinFragment(sampleId + _step) == false)
+        if (m_arcs[arcId].SampleIdWithinArc(sampleId + _step) == false)
         {
             if (isAutoConnect)
             {
-                // Find connected frag
-                fragId = (fragId + _step + m_fragments.Count) % m_fragments.Count;
-                // Sample point can only be the head or rear of the new fragment
-                sampleId = _step > 0 ? 0 : m_fragments[fragId].SampleCount - 1;
+                // Find connected arc
+                arcId = (arcId + _step + m_arcs.Count) % m_arcs.Count;
+                // Sample point can only be the head or rear of the new arc
+                sampleId = _step > 0 ? 0 : m_arcs[arcId].SampleCount - 1;
             }
             else
             {
                 // Fallback: return the nearest vector
-                return m_fragments[fragId].GetSampleVector(sampleId - _step, _step);
+                return m_arcs[arcId].GetSampleVector(sampleId - _step, _step);
             }
         }
 
-        return m_fragments[fragId].GetSampleVector(sampleId, _step);
+        return m_arcs[arcId].GetSampleVector(sampleId, _step);
     }
 
-    public void GetNextId(ref int _fragId, ref int _sampleId, int _step)
+    public void GetNextId(ref int _arcId, ref int _sampleId, int _step)
     {
-        if (m_fragments[_fragId].SampleIdWithinFragment(_sampleId + _step) == false)
+        if (m_arcs[_arcId].SampleIdWithinArc(_sampleId + _step) == false)
         {
             if (isAutoConnect)
             {
-                // Find connected frag
-                _fragId = (_fragId + _step + m_fragments.Count) % m_fragments.Count;
-                // Sample point can only be the head or rear of the new fragment
-                _sampleId = _step > 0 ? 0 : m_fragments[_fragId].SampleCount - 1;
+                // Find connected arc
+                _arcId = (_arcId + _step + m_arcs.Count) % m_arcs.Count;
+                // Sample point can only be the head or rear of the new arc
+                _sampleId = _step > 0 ? 0 : m_arcs[_arcId].SampleCount - 1;
             }
             else
             {
                 // Fallback: clamp on the boundary
-                if (_fragId + _step < 0 || _fragId + _step > m_fragments.Count - 1)
-                    _sampleId = _step > 0 ? m_fragments[_fragId].SampleCount - 1 : 0;
+                if (_arcId + _step < 0 || _arcId + _step > m_arcs.Count - 1)
+                    _sampleId = _step > 0 ? m_arcs[_arcId].SampleCount - 1 : 0;
                 else
-                    _sampleId = _step < 0 ? m_fragments[_fragId].SampleCount - 1 : 0;
+                    _sampleId = _step < 0 ? m_arcs[_arcId].SampleCount - 1 : 0;
 
-                _fragId = Mathf.Clamp(_fragId + _step, 0, m_fragments.Count - 1);
+                _arcId = Mathf.Clamp(_arcId + _step, 0, m_arcs.Count - 1);
             }
         }
 
@@ -223,50 +224,50 @@ public class BezierCurve : MonoBehaviour
         return;
     }
 
-    public Vector3 GetNextSamplePosAmongAllFrags(int _fragId, int _sampleId, int _step)
+    public Vector3 GetNextSamplePosAmongAllArcs(int _arcId, int _sampleId, int _step)
     {
-        int fragId = _fragId;
+        int arcId = _arcId;
         int sampleId = _sampleId;
 
-        if (m_fragments[fragId].SampleIdWithinFragment(sampleId + _step) == false)
+        if (m_arcs[arcId].SampleIdWithinArc(sampleId + _step) == false)
         {
             if (isAutoConnect)
             {
-                // Find connected frag
-                fragId = (fragId + _step + m_fragments.Count) % m_fragments.Count;
-                // Sample point can only be the head or rear of the new fragment
-                sampleId = _step > 0 ? 0 : m_fragments[fragId].SampleCount - 1;
+                // Find connected arc
+                arcId = (arcId + _step + m_arcs.Count) % m_arcs.Count;
+                // Sample point can only be the head or rear of the new arc
+                sampleId = _step > 0 ? 0 : m_arcs[arcId].SampleCount - 1;
             }
             else
             {
                 // Fallback: return the nearest vector
-                return m_fragments[fragId].GetNextSamplePos(sampleId - _step, _step);
+                return m_arcs[arcId].GetNextSamplePos(sampleId - _step, _step);
             }
         }
 
-        return m_fragments[fragId].GetNextSamplePos(sampleId, _step);
+        return m_arcs[arcId].GetNextSamplePos(sampleId, _step);
     }
 
     /// <summary>
-    /// Update all frags in list and return the total count of sample position
+    /// Update all arcs in list and return the total count of sample position
     /// </summary>
     /// <returns></returns>
-    public int ForceUpdateAllFrags()
+    public int ForceUpdateAllArcs()
     {
         int totalPos = 1;
-        foreach (var frag in m_fragments)
+        foreach (var arc in m_arcs)
         {
-            frag.UpdateSamplePos();
-            totalPos += frag.InitSampleCount - 1;
+            arc.UpdateSamplePos();
+            totalPos += arc.InitSampleCount - 1;
         }
         return totalPos;
     }
 
-    public void ForceUpdateOneFrag(int _fragId)
+    public void ForceUpdateOneArc(int _arcId)
     {
-        m_fragments[_fragId].UpdateSamplePos();
-        m_fragments[(_fragId + m_fragments.Count - 1) % m_fragments.Count].UpdateSamplePos();
-        m_fragments[(_fragId + m_fragments.Count + 1) % m_fragments.Count].UpdateSamplePos();
+        m_arcs[_arcId].UpdateSamplePos();
+        m_arcs[(_arcId + m_arcs.Count - 1) % m_arcs.Count].UpdateSamplePos();
+        m_arcs[(_arcId + m_arcs.Count + 1) % m_arcs.Count].UpdateSamplePos();
     }
 
     public void UpdateAllPointPoses()
@@ -281,21 +282,21 @@ public class BezierCurve : MonoBehaviour
     {
         m_lineRenderer = GetComponent<LineRenderer>();
 
-        InitFragmentsFromPoints();
+        InitArcsFromPoints();
     }
     // Update is called once per frame
     void Update()
     {
         if (drawDebugPath)
             DrawDebugCurve();
-        //ForceUpdateFrags();
+        //ForceUpdateArcs();
     }
     private int GetTotalSampleCount()
     {
         int totalPos = 1;
-        foreach (var frag in m_fragments)
+        foreach (var arc in m_arcs)
         {
-            totalPos += frag.InitSampleCount - 1;
+            totalPos += arc.InitSampleCount - 1;
         }
         return totalPos;
     }
@@ -305,18 +306,18 @@ public class BezierCurve : MonoBehaviour
         m_lineRenderer.positionCount = totalPos;
 
         int curPos = 0;
-        for (int i = 0; i < m_fragments.Count; ++i)
+        for (int i = 0; i < m_arcs.Count; ++i)
         {
-            for (int j = 0; j < m_fragments[i].SamplePos.Count - 1; ++j)
+            for (int j = 0; j < m_arcs[i].SamplePos.Count - 1; ++j)
             {
-                m_lineRenderer.SetPosition(curPos + j, m_fragments[i].SamplePos[j]);
+                m_lineRenderer.SetPosition(curPos + j, m_arcs[i].SamplePos[j]);
             }
 
-            curPos += m_fragments[i].SamplePos.Count - 1;
+            curPos += m_arcs[i].SamplePos.Count - 1;
         }
 
-        List<Vector3> lastFragPoses = m_fragments[m_fragments.Count - 1].SamplePos;
-        m_lineRenderer.SetPosition(totalPos - 1, lastFragPoses[lastFragPoses.Count - 1]);
+        List<Vector3> lastArcPoses = m_arcs[m_arcs.Count - 1].SamplePos;
+        m_lineRenderer.SetPosition(totalPos - 1, lastArcPoses[lastArcPoses.Count - 1]);
     }
 
 #if UNITY_EDITOR

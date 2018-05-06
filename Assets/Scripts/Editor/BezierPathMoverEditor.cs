@@ -151,8 +151,8 @@ public class BezierPathMoverEditor : Editor
             //Debug.Log("Has changed something!");
             if (Target.mode == BezierPathMover.MoveMode.DurationBased)
             {
-                Target.bezierPath.InitFragmentsFromPoints();
-                Target.bezierPath.ForceUpdateAllFrags();
+                Target.bezierPath.InitArcsFromPoints();
+                Target.bezierPath.ForceUpdateAllArcs();
                 float sum_dist = IntegrateCurve(Target.velocityCurve, 0, 1, 100);
                 if (sum_dist < 0)
                     Debug.Log("The destination couldn't be reached since the integral of speed is less than 0!");
@@ -165,8 +165,8 @@ public class BezierPathMoverEditor : Editor
             "Actual Velocity: ", Target.actualVelocity);
         Target.alwaysForward = EditorGUILayout.Toggle(
             "Always forward", Target.alwaysForward);
-        Target.alwaysUpdateCurrentFrag = EditorGUILayout.Toggle(
-            "Always update current frag", Target.alwaysUpdateCurrentFrag);
+        Target.alwaysUpdateCurrentArc = EditorGUILayout.Toggle(
+            "Always update current arc", Target.alwaysUpdateCurrentArc);
         Target.rotationConstrain = EditorGUILayout.Vector3Field(
             "Rotation constrain", Target.rotationConstrain);
         Target.keepSteadicamStable = EditorGUILayout.Toggle(
