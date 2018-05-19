@@ -4,7 +4,8 @@ using System.Collections.Generic;
 using UnityEngine.Assertions;
 
 /// <summary>
-/// Single arc curve with 2 points which consists the whole curve
+/// Single curve with 2 anchor points as well 2 handle points.
+/// Head from <see cref="startPoint"/> to <see cref="endPoint"/>
 /// </summary>
 public class BezierArc
 {

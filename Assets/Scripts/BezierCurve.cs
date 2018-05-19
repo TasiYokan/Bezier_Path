@@ -36,6 +36,9 @@ public class BezierCurve : MonoBehaviour
 
     public void AddPoint(BezierPoint _point)
     {
+        if (Points == null)
+            Points = new List<BezierPoint>();
+
         Points.Add(_point);
         UpdateAnchorTransform(Points.Count - 1);
         // TODO: Actually, only need to update the last arc
