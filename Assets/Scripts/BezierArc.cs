@@ -110,6 +110,14 @@ public class BezierArc
         return p;
     }
 
+    public Vector3 CalculateD2(float _t)
+    {
+        Vector3 p = 6 * (1 - _t) * (endPoint.GetHandle(1).Position - 2 * startPoint.GetHandle(0).Position + startPoint.Position)
+            + 6 * _t * (endPoint.Position - 2 * endPoint.GetHandle(1).Position + startPoint.GetHandle(0).Position);
+
+        return p;
+    }
+
     public int GetSampleId(int _startId, ref float _remainLength)
     {
         if (Mathf.Abs(_remainLength).Sgn() == 0)
@@ -180,7 +188,7 @@ public class BezierArc
         return nearestSampleId;
     }
 
-    private Vector3 CalculateCubicBezierPos(float _t)
+    public Vector3 CalculateCubicBezierPos(float _t)
     {
         float u = 1 - _t;
         float t2 = _t * _t;

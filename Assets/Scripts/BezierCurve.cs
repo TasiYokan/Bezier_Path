@@ -51,6 +51,9 @@ public class BezierCurve : MonoBehaviour
         InitArcsFromPoints();
     }
 
+    /// <summary>
+    /// It needs position info of points. Make sure get position from localPosition before initing arcs
+    /// </summary>
     public void InitArcsFromPoints()
     {
         m_arcs = new List<BezierArc>();
@@ -284,7 +287,10 @@ public class BezierCurve : MonoBehaviour
     void Awake()
     {
         m_lineRenderer = GetComponent<LineRenderer>();
-
+        if (m_lineRenderer == null)
+            m_lineRenderer = gameObject.AddComponent<LineRenderer>();
+        
+        UpdateAnchorTransforms();
         InitArcsFromPoints();
     }
     // Update is called once per frame
@@ -292,7 +298,8 @@ public class BezierCurve : MonoBehaviour
     {
         if (drawDebugPath)
             DrawDebugCurve();
-        //ForceUpdateArcs();
+        // To update sample poses
+        ForceUpdateAllArcs();
     }
     private int GetTotalSampleCount()
     {
