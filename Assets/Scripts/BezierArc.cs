@@ -171,7 +171,7 @@ public class BezierArc
             SamplePos.Add(pos);
         }
         //Debug.Log("piecewise length " + Length);
-        Length = CalculateArcLength();
+        Length = CalculateArcLength(0, 1);
         //Debug.Log("Numerical length " + Length);
     }
 
@@ -295,8 +295,16 @@ public class BezierArc
         return p;
     }
 
-    private float CalculateArcLength(int _n = 16)
+    /// <summary>
+    /// An integral over [a, b]
+    /// </summary>
+    /// <param name="_a">start of interval</param>
+    /// <param name="_b">end of interval</param>
+    /// <param name="_n"></param>
+    /// <returns></returns>
+    private float CalculateArcLength(float _a, float _b, int _n = 16)
     {
+        float halfAMinusB = 0.5f * (_b - _a);
         Vector3 P1minusP0 = startPoint.GetHandle(0).Position - startPoint.Position;
         Vector3 P2minusP1 = endPoint.GetHandle(1).Position - startPoint.GetHandle(0).Position;
         Vector3 P3minusP2 = endPoint.Position - endPoint.GetHandle(1).Position;
@@ -304,10 +312,10 @@ public class BezierArc
         for (int i = 0; i < Xni[_n].Count; ++i)
         {
             length +=
-                ComputeD1((float)(Xni[_n][i] * 0.5 + 0.5), P1minusP0, P2minusP1, P3minusP2).magnitude
+                ComputeD1((float)(Xni[_n][i] * halfAMinusB + (_b - halfAMinusB)), P1minusP0, P2minusP1, P3minusP2).magnitude
                 * (float)Wni[_n][i];
         }
-        return length * 0.5f;
+        return length * halfAMinusB;
     }
 
     public Vector3 ComputeD1(float _t, Vector3 _P1minusP0, Vector3 _P2minusP1, Vector3 _P3minusP2)
@@ -321,6 +329,27 @@ public class BezierArc
             + 3 * t2 * _P3minusP2;
 
         return p;
+    }
+
+    public float MapToUniform(float _t)
+    {
+        //Vector3 P1minusP0 = startPoint.GetHandle(0).Position - startPoint.Position;
+        //Vector3 P2minusP1 = endPoint.GetHandle(1).Position - startPoint.GetHandle(0).Position;
+        //Vector3 P3minusP2 = endPoint.Position - endPoint.GetHandle(1).Position;
+        //float c = 1f / (P1minusP0 + P2minusP1 + P3minusP2).magnitude;
+
+        float t = _t;
+        int count = 0;
+        float attempt = CalculateArcLength(0, t) / Length;
+        while (Mathf.Abs(attempt - _t) > 0.001f && count < 10)
+        {
+            count++;
+            t = Mathf.Clamp(t + 0.5f * (_t - attempt), 0, 1);
+            attempt = CalculateArcLength(0, t) / Length;
+        }
+
+        Debug.Log("Account " + count);
+        return t;
     }
     #endregion Methods
 }
