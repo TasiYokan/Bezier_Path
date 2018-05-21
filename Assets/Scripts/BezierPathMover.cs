@@ -268,6 +268,33 @@ public class BezierPathMover : MonoBehaviour
             }
 
             m_elapsedTime += Time.deltaTime;
+
+            // Update speed based on curve
+            if (mode == MoveMode.NodeBased)
+            {
+                if (referenceVelocity > 0)
+                {
+                    float interval = 1f / bezierPath.Arcs.Count;
+
+                    actualVelocity =
+                        referenceVelocity
+                        * velocityCurve.Evaluate(interval * (m_curArcId 
+                            + m_dirSgn * (m_dirSgn > 0 ? m_offsetLength : (bezierPath.Arcs[m_curArcId].Length - m_offsetLength))
+                        / bezierPath.Arcs[m_curArcId].Length));
+                }
+            }
+            else if (mode == MoveMode.DurationBased)
+            {
+                if (referenceVelocity > 0)
+                {
+                    float interval = 1f / bezierPath.Arcs.Count;
+
+                    actualVelocity =
+                        referenceVelocity
+                        * velocityCurve.Evaluate((m_elapsedTime % duration) / duration);
+                }
+            }
+
         }
     }
 }
