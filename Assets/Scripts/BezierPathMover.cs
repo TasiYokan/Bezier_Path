@@ -251,11 +251,32 @@ public class BezierPathMover : MonoBehaviour
             {
                 m_curArcId = nextArcId;
                 m_offsetLength = lengthInArc;
-                transform.position =
-                    bezierPath.Arcs[m_curArcId].CalculateCubicBezierPos(
-                    bezierPath.Arcs[m_curArcId].MapToUniform(
+                float uniformT = bezierPath.Arcs[m_curArcId].MapToUniform(
                         (m_dirSgn > 0 ? m_offsetLength : (bezierPath.Arcs[m_curArcId].Length - m_offsetLength))
-                        / bezierPath.Arcs[m_curArcId].Length));
+                        / bezierPath.Arcs[m_curArcId].Length);
+                transform.position =
+                    bezierPath.Arcs[m_curArcId].CalculateCubicBezierPos(uniformT);
+                transform.forward = bezierPath.Arcs[m_curArcId].CalculateCubicBezierVelocity(uniformT)
+                    * (alwaysForward ? 1 : actualVelocity.Sgn());
+
+
+                if (alwaysForward == true && actualVelocity.Sgn() < 0)
+                {
+                    //bezierPath.GetNextId(ref curArcId, ref curSampleId, -1);
+                }
+                
+                Vector3 rotInEuler = transform.rotation.eulerAngles;
+                rotInEuler = new Vector3(
+                    rotInEuler.x > 180 ? rotInEuler.x - 360 : rotInEuler.x,
+                    rotInEuler.y > 180 ? rotInEuler.y - 360 : rotInEuler.y,
+                    rotInEuler.z > 180 ? rotInEuler.z - 360 : rotInEuler.z);
+
+                rotInEuler = new Vector3(
+                    Mathf.Clamp(rotInEuler.x, -rotationConstrain.x, rotationConstrain.x),
+                    Mathf.Clamp(rotInEuler.y, -rotationConstrain.y, rotationConstrain.y),
+                    Mathf.Clamp(rotInEuler.z, -rotationConstrain.z, rotationConstrain.z));
+
+                transform.rotation = Quaternion.Euler(rotInEuler);
 
                 yield return null;
             }
@@ -272,7 +293,7 @@ public class BezierPathMover : MonoBehaviour
             // Update speed based on curve
             if (mode == MoveMode.NodeBased)
             {
-                if (referenceVelocity > 0)
+                //if (referenceVelocity > 0)
                 {
                     float interval = 1f / bezierPath.Arcs.Count;
 
