@@ -30,7 +30,7 @@ public class BezierPathMover : MonoBehaviour
     /// </summary>
     public float duration = -1;
     private int m_curArcId = 0;
-    private int m_curSampleId = 0;
+    //private int m_curSampleId = 0;
     // Denote the mover is moving along the order of list or not
     private int m_dirSgn = 0;
     private bool m_isStopped = false;
@@ -82,14 +82,14 @@ public class BezierPathMover : MonoBehaviour
     {
         m_isStopped = false;
         m_curArcId = 0;
-        m_curSampleId = 0;
+        //m_curSampleId = 0;
         m_dirSgn = 0;
         m_offset = Vector3.zero;
         m_elapsedTime = 0;
 
         bezierPath.UpdateAnchorTransforms();
-        //bezierPath.ForceUpdateAllArcs();
         bezierPath.InitArcsFromPoints();
+        bezierPath.ForceUpdateAllArcs();
 
         //print("Start time: " + Time.time);
         //if (duration > 0)
@@ -237,7 +237,7 @@ public class BezierPathMover : MonoBehaviour
 
             while (nextArcId >= 0 && nextArcId <= bezierPath.Arcs.Count - 1)
             {
-                if (bezierPath.Arcs[nextArcId].Length > lengthInArc)
+                if (bezierPath.Arcs[nextArcId].Length >= lengthInArc)
                     break;
 
                 lengthInArc -= bezierPath.Arcs[nextArcId].Length;
@@ -245,6 +245,10 @@ public class BezierPathMover : MonoBehaviour
                 nextArcId = m_curArcId + m_dirSgn;
                 if (bezierPath.isAutoConnect)
                     nextArcId = (nextArcId + bezierPath.Arcs.Count) % bezierPath.Arcs.Count;
+
+                // If it moves too fast, we will trigger all nodes that reach in one frame
+                //if (onEveryNodeComplete != null)
+                //    onEveryNodeComplete(nextArcId);
             }
 
             if (nextArcId >= 0 && nextArcId <= bezierPath.Arcs.Count - 1)
@@ -300,7 +304,7 @@ public class BezierPathMover : MonoBehaviour
                     actualVelocity =
                         referenceVelocity
                         * velocityCurve.Evaluate(interval * (m_curArcId 
-                            + m_dirSgn * (m_dirSgn > 0 ? m_offsetLength : (bezierPath.Arcs[m_curArcId].Length - m_offsetLength))
+                            + (m_dirSgn > 0 ? m_offsetLength : (bezierPath.Arcs[m_curArcId].Length - m_offsetLength))
                         / bezierPath.Arcs[m_curArcId].Length));
                 }
             }

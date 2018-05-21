@@ -255,25 +255,30 @@ public class BezierCurve : MonoBehaviour
     }
 
     /// <summary>
-    /// Update all arcs in list and return the total count of sample position
+    /// Update all arc length
     /// </summary>
-    /// <returns></returns>
-    public int ForceUpdateAllArcs()
+    public void ForceUpdateAllArcs()
     {
-        int totalPos = 1;
-        foreach (var arc in m_arcs)
+        //int totalPos = 1;
+        //foreach (var arc in m_arcs)
+        //{
+        //    arc.UpdateSamplePos();
+        //    totalPos += arc.InitSampleCount - 1;
+        //}
+
+        for (int i = 0; i < m_arcs.Count; ++i)
         {
-            arc.UpdateSamplePos();
-            totalPos += arc.InitSampleCount - 1;
+            ForceUpdateOneArc(i);
         }
-        return totalPos;
     }
 
     public void ForceUpdateOneArc(int _arcId)
     {
-        m_arcs[_arcId].UpdateSamplePos();
-        m_arcs[(_arcId + m_arcs.Count - 1) % m_arcs.Count].UpdateSamplePos();
-        m_arcs[(_arcId + m_arcs.Count + 1) % m_arcs.Count].UpdateSamplePos();
+        //m_arcs[_arcId].UpdateSamplePos();
+        //m_arcs[(_arcId + m_arcs.Count - 1) % m_arcs.Count].UpdateSamplePos();
+        //m_arcs[(_arcId + m_arcs.Count + 1) % m_arcs.Count].UpdateSamplePos();
+
+        m_arcs[_arcId].UpdateLength();
     }
 
     public void UpdateAllPointPoses()
@@ -289,7 +294,7 @@ public class BezierCurve : MonoBehaviour
         m_lineRenderer = GetComponent<LineRenderer>();
         if (m_lineRenderer == null)
             m_lineRenderer = gameObject.AddComponent<LineRenderer>();
-        
+
         UpdateAnchorTransforms();
         InitArcsFromPoints();
     }

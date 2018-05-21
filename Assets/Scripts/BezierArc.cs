@@ -171,8 +171,13 @@ public class BezierArc
             SamplePos.Add(pos);
         }
         //Debug.Log("piecewise length " + Length);
-        Length = CalculateArcLength(0, 1);
+        //Length = CalculateArcLength(0, 1);
         //Debug.Log("Numerical length " + Length);
+    }
+
+    public void UpdateLength()
+    {
+        Length = CalculateArcLength(0, 1);
     }
 
     public float CalculateTangentLength(float _t)
