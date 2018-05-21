@@ -36,6 +36,7 @@ public class BezierPathMover : MonoBehaviour
     private bool m_isStopped = false;
     // Offset from corresponding curve point 
     private Vector3 m_offset;
+    private float m_offsetLength;
     private float m_elapsedTime = 0;
 
     public Vector3 rotationConstrain = new Vector3(180, 180, 180);
@@ -84,10 +85,11 @@ public class BezierPathMover : MonoBehaviour
         m_curSampleId = 0;
         m_dirSgn = 0;
         m_offset = Vector3.zero;
+        m_offsetLength = 0;
         m_elapsedTime = 0;
 
         bezierPath.UpdateAnchorTransforms();
-        bezierPath.ForceUpdateAllArcs();
+        //bezierPath.ForceUpdateAllArcs();
         bezierPath.InitArcsFromPoints();
 
         //print("Start time: " + Time.time);
@@ -97,122 +99,169 @@ public class BezierPathMover : MonoBehaviour
         //    referenceVelocity = actualVelocity;
         //}
 
+        actualVelocity = referenceVelocity;
         m_dirSgn = actualVelocity.Sgn();
+
+        #region old method
+        //while (true)
+        //{
+
+        //    // To make mover Steadicam stable
+        //    //if (keepSteadicamStable)
+        //    //    m_curSampleId = bezierPath.Arcs[m_curArcId].FindNearestSampleOnArc(transform.position, ref m_offset);
+
+        //    // Should switch the back and front sample point of this mover
+        //    if (m_dirSgn * actualVelocity.Sgn() < 0)
+        //    {
+        //        // These are next ids
+        //        int oldArcId = m_curArcId;
+        //        int oldSampleId = m_curSampleId;
+        //        bezierPath.GetNextId(ref m_curArcId, ref m_curSampleId, m_dirSgn);
+
+        //        Vector3 oldToNew = bezierPath.GetSamplePos(m_curArcId, m_curSampleId)
+        //            - bezierPath.GetSamplePos(oldArcId, oldSampleId);
+        //        // Update offset after switching base
+        //        m_offset = m_offset - oldToNew;
+        //        m_dirSgn = actualVelocity.Sgn();
+        //    }
+
+        //    int prevId = m_curArcId;
+        //    bezierPath.GetCurvePos(ref m_curArcId, ref m_curSampleId, actualVelocity * Time.deltaTime, ref m_offset);
+
+        //    if (m_curArcId != prevId)
+        //    {
+        //        if (onEveryNodeComplete != null)
+        //            onEveryNodeComplete(m_curArcId);
+        //    }
+
+        //    if (m_curArcId < 0 || m_curArcId >= bezierPath.Arcs.Count
+        //        || bezierPath.Arcs[m_curArcId].SampleIdWithinArc(m_curSampleId) == false)
+        //    {
+        //        print("Has reached end with time: " + m_elapsedTime);
+        //        //print("Finish time: " + Time.time);
+        //        if (onEndCallback != null)
+        //            onEndCallback.Invoke();
+
+        //        m_isStopped = true;
+        //        yield break;
+        //    }
+
+        //    transform.position =
+        //        bezierPath.Arcs[m_curArcId].SamplePos[m_curSampleId] + m_offset;
+
+        //    //transform.forward = bezierPath.GetSampleVectorAmongAllArcs(m_curArcId, m_curSampleId, speedInSecond.Sgn());
+        //    //transform.LookAt(bezierPath.GetNextSamplePosAmongAllArcs(m_curArcId, m_curSampleId, speed.Sgn()));
+        //    int curArcId = m_curArcId;
+        //    int curSampleId = m_curSampleId;
+        //    if (alwaysForward == true && actualVelocity.Sgn() < 0)
+        //    {
+        //        bezierPath.GetNextId(ref curArcId, ref curSampleId, -1);
+        //    }
+        //    int nextArcId = curArcId;
+        //    if (bezierPath.isAutoConnect)
+        //    {
+        //        // Find connected arc
+        //        nextArcId = (nextArcId + 1 + bezierPath.Arcs.Count) % bezierPath.Arcs.Count;
+        //    }
+        //    else
+        //    {
+        //        nextArcId = Mathf.Clamp(nextArcId + 1, 0, bezierPath.Points.Count - 1);
+        //    }
+
+        //    //transform.forward = Vector3.Lerp(transform.forward,
+        //    //    bezierPath.GetSampleVectorAmongAllArcs(curArcId, curSampleId, alwaysForward ? 1 : speedInSecond.Sgn()),
+        //    //    Mathf.Abs(speedInSecond) * 1 * Time.deltaTime);
+        //    Vector3 curArcVector = bezierPath.Points[nextArcId].Position - bezierPath.Points[curArcId].Position;
+        //    Vector3 transVector = this.transform.position - bezierPath.Points[curArcId].Position;
+        //    float offsetLength = Vector3.Dot(curArcVector, transVector) / curArcVector.sqrMagnitude;
+        //    transform.forward = bezierPath.Arcs[m_curArcId].CalculateCubicBezierVelocity(offsetLength)
+        //        * (alwaysForward ? 1 : actualVelocity.Sgn());
+
+        //    Vector3 rotInEuler = transform.rotation.eulerAngles;
+        //    rotInEuler = new Vector3(
+        //        rotInEuler.x > 180 ? rotInEuler.x - 360 : rotInEuler.x,
+        //        rotInEuler.y > 180 ? rotInEuler.y - 360 : rotInEuler.y,
+        //        rotInEuler.z > 180 ? rotInEuler.z - 360 : rotInEuler.z);
+
+        //    rotInEuler = new Vector3(
+        //        Mathf.Clamp(rotInEuler.x, -rotationConstrain.x, rotationConstrain.x),
+        //        Mathf.Clamp(rotInEuler.y, -rotationConstrain.y, rotationConstrain.y),
+        //        Mathf.Clamp(rotInEuler.z, -rotationConstrain.z, rotationConstrain.z));
+
+        //    transform.rotation = Quaternion.Euler(rotInEuler);
+
+        //    m_elapsedTime += Time.deltaTime;
+
+        //    // Update speed based on curve
+        //    if (mode == MoveMode.NodeBased)
+        //    {
+        //        if (referenceVelocity > 0)
+        //        {
+        //            float interval = 1f / bezierPath.Arcs.Count;
+
+        //            actualVelocity =
+        //                referenceVelocity
+        //                * velocityCurve.Evaluate(interval * (curArcId + offsetLength));
+        //        }
+        //    }
+        //    else if (mode == MoveMode.DurationBased)
+        //    {
+        //        if (referenceVelocity > 0)
+        //        {
+        //            float interval = 1f / bezierPath.Arcs.Count;
+
+        //            actualVelocity =
+        //                referenceVelocity
+        //                * velocityCurve.Evaluate((m_elapsedTime % duration) / duration);
+        //        }
+        //    }
+
+        //    yield return null;
+        //}
+        #endregion old method
+
+        print("Curve Length " + bezierPath.totalLength);
 
         while (true)
         {
+            float length = 0;
+            float lengthInArc = m_offsetLength + actualVelocity * Time.deltaTime;
 
-            // To make mover Steadicam stable
-            //if (keepSteadicamStable)
-            //    m_curSampleId = bezierPath.Arcs[m_curArcId].FindNearestSampleOnArc(transform.position, ref m_offset);
+            int nextArcId = m_curArcId;
 
-            // Should switch the back and front sample point of this mover
-            if (m_dirSgn * actualVelocity.Sgn() < 0)
+            while (nextArcId >= 0 && nextArcId <= bezierPath.Arcs.Count - 1)
             {
-                // These are next ids
-                int oldArcId = m_curArcId;
-                int oldSampleId = m_curSampleId;
-                bezierPath.GetNextId(ref m_curArcId, ref m_curSampleId, m_dirSgn);
+                length = bezierPath.Arcs[nextArcId].Length;
 
-                Vector3 oldToNew = bezierPath.GetSamplePos(m_curArcId, m_curSampleId)
-                    - bezierPath.GetSamplePos(oldArcId, oldSampleId);
-                // Update offset after switching base
-                m_offset = m_offset - oldToNew;
-                m_dirSgn = actualVelocity.Sgn();
+                if (length > lengthInArc)
+                    break;
+
+                lengthInArc -= length;
+
+                nextArcId = m_curArcId + m_dirSgn;
+                if (bezierPath.isAutoConnect)
+                    nextArcId = (nextArcId + bezierPath.Arcs.Count) % bezierPath.Arcs.Count;
             }
 
-            int prevId = m_curArcId;
-            bezierPath.GetCurvePos(ref m_curArcId, ref m_curSampleId, actualVelocity * Time.deltaTime, ref m_offset);
-
-            if (m_curArcId != prevId)
+            if (nextArcId >= 0 && nextArcId <= bezierPath.Arcs.Count - 1)
             {
-                if (onEveryNodeComplete != null)
-                    onEveryNodeComplete(m_curArcId);
-            }
+                m_curArcId = nextArcId;
+                m_offsetLength = lengthInArc;
+                transform.position =
+                    bezierPath.Arcs[m_curArcId].CalculateCubicBezierPos(
+                    bezierPath.Arcs[m_curArcId].MapToUniform(m_offsetLength / bezierPath.Arcs[m_curArcId].Length));
 
-            if (m_curArcId < 0 || m_curArcId >= bezierPath.Arcs.Count
-                || bezierPath.Arcs[m_curArcId].SampleIdWithinArc(m_curSampleId) == false)
-            {
-                print("Has reached end with time: " + m_elapsedTime);
-                //print("Finish time: " + Time.time);
-                if (onEndCallback != null)
-                    onEndCallback.Invoke();
-
-                m_isStopped = true;
-                yield break;
-            }
-
-            transform.position =
-                bezierPath.Arcs[m_curArcId].SamplePos[m_curSampleId] + m_offset;
-
-            //transform.forward = bezierPath.GetSampleVectorAmongAllArcs(m_curArcId, m_curSampleId, speedInSecond.Sgn());
-            //transform.LookAt(bezierPath.GetNextSamplePosAmongAllArcs(m_curArcId, m_curSampleId, speed.Sgn()));
-            int curArcId = m_curArcId;
-            int curSampleId = m_curSampleId;
-            if (alwaysForward == true && actualVelocity.Sgn() < 0)
-            {
-                bezierPath.GetNextId(ref curArcId, ref curSampleId, -1);
-            }
-            int nextArcId = curArcId;
-            if (bezierPath.isAutoConnect)
-            {
-                // Find connected arc
-                nextArcId = (nextArcId + 1 + bezierPath.Arcs.Count) % bezierPath.Arcs.Count;
+                yield return null;
             }
             else
             {
-                nextArcId = Mathf.Clamp(nextArcId + 1, 0, bezierPath.Points.Count - 1);
+                print("Has reached end with time: " + m_elapsedTime);
+                if (onEndCallback != null)
+                    onEndCallback.Invoke();
+                yield break;
             }
-
-            //transform.forward = Vector3.Lerp(transform.forward,
-            //    bezierPath.GetSampleVectorAmongAllArcs(curArcId, curSampleId, alwaysForward ? 1 : speedInSecond.Sgn()),
-            //    Mathf.Abs(speedInSecond) * 1 * Time.deltaTime);
-            Vector3 curArcVector = bezierPath.Points[nextArcId].Position - bezierPath.Points[curArcId].Position;
-            Vector3 transVector = this.transform.position - bezierPath.Points[curArcId].Position;
-            float offsetLength = Vector3.Dot(curArcVector, transVector) / curArcVector.sqrMagnitude;
-            transform.forward = bezierPath.Arcs[m_curArcId].CalculateCubicBezierVelocity(offsetLength)
-                * (alwaysForward ? 1 : actualVelocity.Sgn());
-
-            Vector3 rotInEuler = transform.rotation.eulerAngles;
-            rotInEuler = new Vector3(
-                rotInEuler.x > 180 ? rotInEuler.x - 360 : rotInEuler.x,
-                rotInEuler.y > 180 ? rotInEuler.y - 360 : rotInEuler.y,
-                rotInEuler.z > 180 ? rotInEuler.z - 360 : rotInEuler.z);
-
-            rotInEuler = new Vector3(
-                Mathf.Clamp(rotInEuler.x, -rotationConstrain.x, rotationConstrain.x),
-                Mathf.Clamp(rotInEuler.y, -rotationConstrain.y, rotationConstrain.y),
-                Mathf.Clamp(rotInEuler.z, -rotationConstrain.z, rotationConstrain.z));
-
-            transform.rotation = Quaternion.Euler(rotInEuler);
 
             m_elapsedTime += Time.deltaTime;
-
-            // Update speed based on curve
-            if (mode == MoveMode.NodeBased)
-            {
-                if (referenceVelocity > 0)
-                {
-                    float interval = 1f / bezierPath.Arcs.Count;
-
-                    actualVelocity =
-                        referenceVelocity
-                        * velocityCurve.Evaluate(interval * (curArcId + offsetLength));
-                }
-            }
-            else if (mode == MoveMode.DurationBased)
-            {
-                if (referenceVelocity > 0)
-                {
-                    float interval = 1f / bezierPath.Arcs.Count;
-
-                    actualVelocity =
-                        referenceVelocity
-                        * velocityCurve.Evaluate((m_elapsedTime % duration) / duration);
-                }
-            }
-
-            yield return null;
         }
     }
 }

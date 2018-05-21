@@ -348,7 +348,7 @@ public class BezierArc
             attempt = CalculateArcLength(0, t) / Length;
         }
 
-        Debug.Log("Account " + count);
+        //Debug.Log("Account " + count);
         return t;
     }
     #endregion Methods
