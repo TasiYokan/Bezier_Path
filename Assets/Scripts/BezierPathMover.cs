@@ -85,7 +85,6 @@ public class BezierPathMover : MonoBehaviour
         m_curSampleId = 0;
         m_dirSgn = 0;
         m_offset = Vector3.zero;
-        m_offsetLength = 0;
         m_elapsedTime = 0;
 
         bezierPath.UpdateAnchorTransforms();
@@ -100,7 +99,8 @@ public class BezierPathMover : MonoBehaviour
         //}
 
         actualVelocity = referenceVelocity;
-        m_dirSgn = actualVelocity.Sgn();
+        m_dirSgn = 1;
+        m_offsetLength = 0;
 
         #region old method
         //while (true)
@@ -224,19 +224,23 @@ public class BezierPathMover : MonoBehaviour
 
         while (true)
         {
-            float length = 0;
-            float lengthInArc = m_offsetLength + actualVelocity * Time.deltaTime;
+            if (m_dirSgn != actualVelocity.Sgn())
+            {
+                m_offsetLength = bezierPath.Arcs[m_curArcId].Length - m_offsetLength;
+                m_dirSgn = actualVelocity.Sgn();
+            }
+            float lengthInArc = m_offsetLength
+                + m_dirSgn * actualVelocity * Time.deltaTime;
 
+            // nextArcId: For this frame, which arc we should move to
             int nextArcId = m_curArcId;
 
             while (nextArcId >= 0 && nextArcId <= bezierPath.Arcs.Count - 1)
             {
-                length = bezierPath.Arcs[nextArcId].Length;
-
-                if (length > lengthInArc)
+                if (bezierPath.Arcs[nextArcId].Length > lengthInArc)
                     break;
 
-                lengthInArc -= length;
+                lengthInArc -= bezierPath.Arcs[nextArcId].Length;
 
                 nextArcId = m_curArcId + m_dirSgn;
                 if (bezierPath.isAutoConnect)
@@ -249,7 +253,9 @@ public class BezierPathMover : MonoBehaviour
                 m_offsetLength = lengthInArc;
                 transform.position =
                     bezierPath.Arcs[m_curArcId].CalculateCubicBezierPos(
-                    bezierPath.Arcs[m_curArcId].MapToUniform(m_offsetLength / bezierPath.Arcs[m_curArcId].Length));
+                    bezierPath.Arcs[m_curArcId].MapToUniform(
+                        (m_dirSgn > 0 ? m_offsetLength : (bezierPath.Arcs[m_curArcId].Length - m_offsetLength))
+                        / bezierPath.Arcs[m_curArcId].Length));
 
                 yield return null;
             }
