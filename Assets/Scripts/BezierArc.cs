@@ -8,8 +8,6 @@ using UnityEngine.Assertions;
 /// </summary>
 public class BezierArc
 {
-    #region Fields
-
     // Legendre-Gauss abscissae (xi values, defined at i=n as the roots of the nth order Legendre polynomial Pn(x))
     private static List<List<double>> Xni = new List<List<double>>
     {
@@ -69,76 +67,27 @@ public class BezierArc
         new List<double>{0.1336545721861061753514571105458443385831,0.1324620394046966173716424647033169258050,0.1324620394046966173716424647033169258050,0.1289057221880821499785953393997936532597,0.1289057221880821499785953393997936532597,0.1230490843067295304675784006720096548158,0.1230490843067295304675784006720096548158,0.1149966402224113649416435129339613014914,0.1149966402224113649416435129339613014914,0.1048920914645414100740861850147438548584,0.1048920914645414100740861850147438548584,0.0929157660600351474770186173697646486034,0.0929157660600351474770186173697646486034,0.0792814117767189549228925247420432269137,0.0792814117767189549228925247420432269137,0.0642324214085258521271696151589109980391,0.0642324214085258521271696151589109980391,0.0480376717310846685716410716320339965612,0.0480376717310846685716410716320339965612,0.0309880058569794443106942196418845053837,0.0309880058569794443106942196418845053837,0.0134118594871417720813094934586150649766,0.0134118594871417720813094934586150649766},
         new List<double>{0.1279381953467521569740561652246953718517,0.1279381953467521569740561652246953718517,0.1258374563468282961213753825111836887264,0.1258374563468282961213753825111836887264,0.1216704729278033912044631534762624256070,0.1216704729278033912044631534762624256070,0.1155056680537256013533444839067835598622,0.1155056680537256013533444839067835598622,0.1074442701159656347825773424466062227946,0.1074442701159656347825773424466062227946,0.0976186521041138882698806644642471544279,0.0976186521041138882698806644642471544279,0.0861901615319532759171852029837426671850,0.0861901615319532759171852029837426671850,0.0733464814110803057340336152531165181193,0.0733464814110803057340336152531165181193,0.0592985849154367807463677585001085845412,0.0592985849154367807463677585001085845412,0.0442774388174198061686027482113382288593,0.0442774388174198061686027482113382288593,0.0285313886289336631813078159518782864491,0.0285313886289336631813078159518782864491,0.0123412297999871995468056670700372915759,0.0123412297999871995468056670700372915759}
     };
-
-    #endregion Fields
-
-    #region Constructors
-
-    #endregion Constructors
-
-    #region Properties
-
-    #endregion Properties
-
-    #region Methods
-
-    #endregion Methods
-
+    
     #region Fields
 
     public BezierPoint startPoint;
     public BezierPoint endPoint;
-
-    //private int m_initSampleCount;
-    private List<Vector3> m_samplePoses;
+    
     private float m_length;
 
     #endregion Fields
 
     #region Constructors
 
-    public BezierArc(BezierPoint _start, BezierPoint _end, int _sampleCount = 10)
+    public BezierArc(BezierPoint _start, BezierPoint _end)
     {
         startPoint = _start;
         endPoint = _end;
-        //m_initSampleCount = _sampleCount;
-
-        //SamplePos = new List<Vector3>();
-        //UpdateSamplePos();
     }
 
     #endregion Constructors
 
     #region Properties
-
-    //public List<Vector3> SamplePos
-    //{
-    //    get
-    //    {
-    //        return m_samplePoses;
-    //    }
-
-    //    set
-    //    {
-    //        m_samplePoses = value;
-    //    }
-    //}
-
-    //public int SampleCount
-    //{
-    //    get
-    //    {
-    //        return m_samplePoses.Count;
-    //    }
-    //}
-
-    //public int InitSampleCount
-    //{
-    //    get
-    //    {
-    //        return m_initSampleCount;
-    //    }
-    //}
 
     public float Length
     {
@@ -157,40 +106,9 @@ public class BezierArc
 
     #region Methods
 
-    //public void UpdateSamplePos()
-    //{
-    //    //Length = 0;
-    //    SamplePos.Clear();
-    //    for (int i = 0; i < m_initSampleCount; ++i)
-    //    {
-    //        Vector3 pos = CalculateCubicBezierPos(i / (float)(m_initSampleCount - 1));
-
-    //        //if (i > 0)
-    //        //    Length += (pos - SamplePos[i - 1]).magnitude;
-
-    //        SamplePos.Add(pos);
-    //    }
-    //    //Debug.Log("piecewise length " + Length);
-    //    //Length = CalculateArcLength(0, 1);
-    //    //Debug.Log("Numerical length " + Length);
-    //}
-
     public void UpdateLength()
     {
         Length = CalculateArcLength(0, 1);
-    }
-
-    public float CalculateTangentLength(float _t)
-    {
-        float u = 1 - _t;
-        float t2 = _t * _t;
-        float u2 = u * u;
-
-        float p = 3 * u2 * (startPoint.GetHandle(0).Position.magnitude - startPoint.Position.magnitude)
-            + 6 * u * _t * (endPoint.GetHandle(1).Position.magnitude - startPoint.GetHandle(0).Position.magnitude)
-            + 3 * t2 * (endPoint.Position.magnitude - endPoint.GetHandle(1).Position.magnitude);
-
-        return p;
     }
 
     public Vector3 CalculateCubicBezierVelocity(float _t)
@@ -214,72 +132,19 @@ public class BezierArc
         return p;
     }
 
-    //public int GetSampleId(int _startId, ref float _remainLength)
-    //{
-    //    if (Mathf.Abs(_remainLength).Sgn() == 0)
-    //        return _startId;
-
-    //    int step = _remainLength.Sgn();
-    //    float totalDistance = 0;
-    //    float previousDistance = 0;
-
-    //    //float offsetLength =
-    //    //    Vector3.Cross(_offset, GetSampleVector(_startId, step)).magnitude;
-
-    //    int curId = _startId;
-    //    while (totalDistance.FloatLess(Mathf.Abs(_remainLength)))
-    //    {
-    //        previousDistance = totalDistance;
-
-    //        if (SampleIdWithinArc(curId + step))
-    //        {
-    //            totalDistance += GetSampleVector(curId, step).magnitude;
-    //        }
-    //        else
-    //        {
-    //            // Even the remain length/moving speed can't cover offset
-    //            _remainLength -= step * previousDistance;
-    //            return curId;
-    //        }
-    //        curId += step;
-    //    }
-
-    //    _remainLength -= step * previousDistance;
-    //    return curId - step;
-    //}
-
-    //public Vector3 GetSampleVector(int _id, int _step)
-    //{
-    //    Assert.IsTrue(SampleIdWithinArc(_id + _step));
-
-    //    return m_samplePoses[_id + _step] - m_samplePoses[_id];
-    //}
-
-    //public Vector3 GetNextSamplePos(int _id, int _step)
-    //{
-    //    Assert.IsTrue(SampleIdWithinArc(_id + _step));
-
-    //    return m_samplePoses[_id + _step];
-    //}
-
-    //public bool SampleIdWithinArc(int _id)
-    //{
-    //    return _id >= 0 && _id < m_samplePoses.Count;
-    //}
-
     public int FindNearestSampleOnArc(Vector3 _pos, ref Vector3 _offset)
     {
         int nearestSampleId = 0;
-        float shortestDist = (_pos - m_samplePoses[nearestSampleId]).sqrMagnitude;
-        for (int i = 1; i < m_samplePoses.Count; ++i)
-        {
-            if ((_pos - m_samplePoses[i]).sqrMagnitude.FloatLess(shortestDist))
-            {
-                nearestSampleId = i;
-                _offset = _pos - m_samplePoses[i];
-                shortestDist = _offset.sqrMagnitude;
-            }
-        }
+        //float shortestDist = (_pos - m_samplePoses[nearestSampleId]).sqrMagnitude;
+        //for (int i = 1; i < m_samplePoses.Count; ++i)
+        //{
+        //    if ((_pos - m_samplePoses[i]).sqrMagnitude.FloatLess(shortestDist))
+        //    {
+        //        nearestSampleId = i;
+        //        _offset = _pos - m_samplePoses[i];
+        //        shortestDist = _offset.sqrMagnitude;
+        //    }
+        //}
 
         return nearestSampleId;
     }
@@ -338,11 +203,6 @@ public class BezierArc
 
     public float MapToUniform(float _t)
     {
-        //Vector3 P1minusP0 = startPoint.GetHandle(0).Position - startPoint.Position;
-        //Vector3 P2minusP1 = endPoint.GetHandle(1).Position - startPoint.GetHandle(0).Position;
-        //Vector3 P3minusP2 = endPoint.Position - endPoint.GetHandle(1).Position;
-        //float c = 1f / (P1minusP0 + P2minusP1 + P3minusP2).magnitude;
-
         float t = _t;
         int count = 0;
         float attempt = CalculateArcLength(0, t) / Length;
@@ -353,7 +213,7 @@ public class BezierArc
             attempt = CalculateArcLength(0, t) / Length;
         }
 
-        //Debug.Log("Account " + count);
+        //Debug.Log("Iterate depth " + count);
         return t;
     }
     #endregion Methods
