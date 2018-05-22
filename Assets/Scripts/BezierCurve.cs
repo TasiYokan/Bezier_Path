@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Assertions;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -33,6 +34,17 @@ public class BezierCurve : MonoBehaviour
 
     #region Methods
 
+    public void SetPoints(List<BezierPoint> _points)
+    {
+        Points = _points;
+        UpdateAnchorTransforms();
+        InitArcsFromPoints();
+    }
+
+    /// <summary>
+    /// Always append at tail
+    /// </summary>
+    /// <param name="_point"></param>
     public void AddPoint(BezierPoint _point)
     {
         if (Points == null)
@@ -40,8 +52,23 @@ public class BezierCurve : MonoBehaviour
 
         Points.Add(_point);
         UpdateAnchorTransform(Points.Count - 1);
-        // TODO: Actually, only need to update the last arc
-        InitArcsFromPoints();
+
+        //Happens in Editor mode
+        if (m_arcs == null)
+            InitArcsFromPoints();
+        else
+        {
+            if (isAutoConnect)
+            {
+                m_arcs[m_arcs.Count - 1] = InitArcsFromPointsAt(Points.Count - 2);
+                m_arcs.Add(InitArcsFromPointsAt(Points.Count - 1));
+            }
+            else
+            {
+                m_arcs.Add(InitArcsFromPointsAt(Points.Count - 1));
+            }
+        }
+        //InitArcsFromPoints();
     }
 
     public void RemovePoint(BezierPoint _point)
@@ -56,14 +83,11 @@ public class BezierCurve : MonoBehaviour
     public void InitArcsFromPoints()
     {
         m_arcs = new List<BezierArc>();
-        for (int i = 0; i < Points.Count - 1; i++)
+        for (int i = 0; i < Points.Count; i++)
         {
-            m_arcs.Add(new BezierArc(Points[i], Points[i + 1]));
-        }
-
-        if (isAutoConnect && Points.Count > 1)
-        {
-            m_arcs.Add(new BezierArc(Points[Points.Count - 1], Points[0]));
+            BezierArc newArc = InitArcsFromPointsAt(i);
+            if (newArc != null)
+                m_arcs.Add(newArc);
         }
 
         // TODO: Recalculate length, maybe not here
@@ -73,6 +97,31 @@ public class BezierCurve : MonoBehaviour
             totalLength += arc.Length;
         }
         //print("Total length: " + totalLength);
+    }
+
+    public BezierArc InitArcsFromPointsAt(int _id)
+    {
+        Assert.IsNotNull(m_arcs, "m_arcs should not be null before set only one arc!");
+        Assert.IsTrue(_id >= 0 && _id <= Points.Count - 1, "Invalid point id! " + _id);
+        if (Points.Count <= 1)
+        {
+            Debug.Log("Count of Points should greater than 1");
+            return null;
+        }
+
+        int endId;
+        if (_id < Points.Count - 1)
+        {
+            endId = _id + 1;
+        }
+        else
+        {
+            if (isAutoConnect)
+                endId = 0;
+            else
+                return null;
+        }
+        return new BezierArc(Points[_id], Points[endId]);
     }
 
     /// <summary>
@@ -87,6 +136,10 @@ public class BezierCurve : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Using point's LocalPosition to initialize Position
+    /// </summary>
+    /// <param name="_id"></param>
     public void UpdateAnchorTransform(int _id)
     {
         SetAnchorLocalRotation(_id, Points[_id].LocalRotation);
@@ -102,6 +155,11 @@ public class BezierCurve : MonoBehaviour
             * (_position - transform.position));
     }
 
+    /// <summary>
+    /// Update its Position as well
+    /// </summary>
+    /// <param name="_id"></param>
+    /// <param name="_localPosition"></param>
     public void SetAnchorLocalPosition(int _id, Vector3 _localPosition)
     {
         Points[_id].LocalPosition = _localPosition;
@@ -176,7 +234,7 @@ public class BezierCurve : MonoBehaviour
             for (int j = 0; j < sampleCountInArc; ++j)
             {
                 m_lineRenderer.SetPosition(i * sampleCountInArc + j,
-                    m_arcs[i].CalculateCubicBezierPos((1f * j) / (sampleCountInArc-1)));
+                    m_arcs[i].CalculateCubicBezierPos((1f * j) / (sampleCountInArc - 1)));
             }
         }
     }

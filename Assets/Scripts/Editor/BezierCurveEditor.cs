@@ -159,10 +159,7 @@ public class BezierCurveEditor : Editor
         }
 
         isAutoConnectProperty.boolValue = GUILayout.Toggle(isAutoConnectProperty.boolValue, "Connect first and last nodes?", GUILayout.Width(Screen.width));
-        GUILayout.BeginHorizontal();
-        GUILayout.Label("Total Sample Count: ", GUILayout.Width(Screen.width / 2f));
-        totalSampleCountProperty.intValue = EditorGUILayout.IntField(totalSampleCountProperty.intValue);
-        GUILayout.EndHorizontal();
+
         drawDebugPathProperty.boolValue = GUILayout.Toggle(drawDebugPathProperty.boolValue,
             "Use LineRenderer to draw path in game?", GUILayout.Width(Screen.width));
 
@@ -235,7 +232,7 @@ public class BezierCurveEditor : Editor
                 new string[] { "Json files", "json", "All files", "*" });
             if (loadPath.Length != 0)
             {
-                Target.Points = JsonSerializationHelper.ReadJsonList<BezierPoint>(loadPath);
+                Target.SetPoints(JsonSerializationHelper.ReadJsonList<BezierPoint>(loadPath));
             }
             Target.UpdateAnchorTransforms();
 
