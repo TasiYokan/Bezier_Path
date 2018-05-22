@@ -89,7 +89,7 @@ public class BezierArc
     public BezierPoint startPoint;
     public BezierPoint endPoint;
 
-    private int m_initSampleCount;
+    //private int m_initSampleCount;
     private List<Vector3> m_samplePoses;
     private float m_length;
 
@@ -101,44 +101,44 @@ public class BezierArc
     {
         startPoint = _start;
         endPoint = _end;
-        m_initSampleCount = _sampleCount;
+        //m_initSampleCount = _sampleCount;
 
-        SamplePos = new List<Vector3>();
-        UpdateSamplePos();
+        //SamplePos = new List<Vector3>();
+        //UpdateSamplePos();
     }
 
     #endregion Constructors
 
     #region Properties
 
-    public List<Vector3> SamplePos
-    {
-        get
-        {
-            return m_samplePoses;
-        }
+    //public List<Vector3> SamplePos
+    //{
+    //    get
+    //    {
+    //        return m_samplePoses;
+    //    }
 
-        set
-        {
-            m_samplePoses = value;
-        }
-    }
+    //    set
+    //    {
+    //        m_samplePoses = value;
+    //    }
+    //}
 
-    public int SampleCount
-    {
-        get
-        {
-            return m_samplePoses.Count;
-        }
-    }
+    //public int SampleCount
+    //{
+    //    get
+    //    {
+    //        return m_samplePoses.Count;
+    //    }
+    //}
 
-    public int InitSampleCount
-    {
-        get
-        {
-            return m_initSampleCount;
-        }
-    }
+    //public int InitSampleCount
+    //{
+    //    get
+    //    {
+    //        return m_initSampleCount;
+    //    }
+    //}
 
     public float Length
     {
@@ -157,23 +157,23 @@ public class BezierArc
 
     #region Methods
 
-    public void UpdateSamplePos()
-    {
-        //Length = 0;
-        SamplePos.Clear();
-        for (int i = 0; i < m_initSampleCount; ++i)
-        {
-            Vector3 pos = CalculateCubicBezierPos(i / (float)(m_initSampleCount - 1));
+    //public void UpdateSamplePos()
+    //{
+    //    //Length = 0;
+    //    SamplePos.Clear();
+    //    for (int i = 0; i < m_initSampleCount; ++i)
+    //    {
+    //        Vector3 pos = CalculateCubicBezierPos(i / (float)(m_initSampleCount - 1));
 
-            //if (i > 0)
-            //    Length += (pos - SamplePos[i - 1]).magnitude;
+    //        //if (i > 0)
+    //        //    Length += (pos - SamplePos[i - 1]).magnitude;
 
-            SamplePos.Add(pos);
-        }
-        //Debug.Log("piecewise length " + Length);
-        //Length = CalculateArcLength(0, 1);
-        //Debug.Log("Numerical length " + Length);
-    }
+    //        SamplePos.Add(pos);
+    //    }
+    //    //Debug.Log("piecewise length " + Length);
+    //    //Length = CalculateArcLength(0, 1);
+    //    //Debug.Log("Numerical length " + Length);
+    //}
 
     public void UpdateLength()
     {
@@ -214,58 +214,58 @@ public class BezierArc
         return p;
     }
 
-    public int GetSampleId(int _startId, ref float _remainLength)
-    {
-        if (Mathf.Abs(_remainLength).Sgn() == 0)
-            return _startId;
+    //public int GetSampleId(int _startId, ref float _remainLength)
+    //{
+    //    if (Mathf.Abs(_remainLength).Sgn() == 0)
+    //        return _startId;
 
-        int step = _remainLength.Sgn();
-        float totalDistance = 0;
-        float previousDistance = 0;
+    //    int step = _remainLength.Sgn();
+    //    float totalDistance = 0;
+    //    float previousDistance = 0;
 
-        //float offsetLength =
-        //    Vector3.Cross(_offset, GetSampleVector(_startId, step)).magnitude;
+    //    //float offsetLength =
+    //    //    Vector3.Cross(_offset, GetSampleVector(_startId, step)).magnitude;
 
-        int curId = _startId;
-        while (totalDistance.FloatLess(Mathf.Abs(_remainLength)))
-        {
-            previousDistance = totalDistance;
+    //    int curId = _startId;
+    //    while (totalDistance.FloatLess(Mathf.Abs(_remainLength)))
+    //    {
+    //        previousDistance = totalDistance;
 
-            if (SampleIdWithinArc(curId + step))
-            {
-                totalDistance += GetSampleVector(curId, step).magnitude;
-            }
-            else
-            {
-                // Even the remain length/moving speed can't cover offset
-                _remainLength -= step * previousDistance;
-                return curId;
-            }
-            curId += step;
-        }
+    //        if (SampleIdWithinArc(curId + step))
+    //        {
+    //            totalDistance += GetSampleVector(curId, step).magnitude;
+    //        }
+    //        else
+    //        {
+    //            // Even the remain length/moving speed can't cover offset
+    //            _remainLength -= step * previousDistance;
+    //            return curId;
+    //        }
+    //        curId += step;
+    //    }
 
-        _remainLength -= step * previousDistance;
-        return curId - step;
-    }
+    //    _remainLength -= step * previousDistance;
+    //    return curId - step;
+    //}
 
-    public Vector3 GetSampleVector(int _id, int _step)
-    {
-        Assert.IsTrue(SampleIdWithinArc(_id + _step));
+    //public Vector3 GetSampleVector(int _id, int _step)
+    //{
+    //    Assert.IsTrue(SampleIdWithinArc(_id + _step));
 
-        return m_samplePoses[_id + _step] - m_samplePoses[_id];
-    }
+    //    return m_samplePoses[_id + _step] - m_samplePoses[_id];
+    //}
 
-    public Vector3 GetNextSamplePos(int _id, int _step)
-    {
-        Assert.IsTrue(SampleIdWithinArc(_id + _step));
+    //public Vector3 GetNextSamplePos(int _id, int _step)
+    //{
+    //    Assert.IsTrue(SampleIdWithinArc(_id + _step));
 
-        return m_samplePoses[_id + _step];
-    }
+    //    return m_samplePoses[_id + _step];
+    //}
 
-    public bool SampleIdWithinArc(int _id)
-    {
-        return _id >= 0 && _id < m_samplePoses.Count;
-    }
+    //public bool SampleIdWithinArc(int _id)
+    //{
+    //    return _id >= 0 && _id < m_samplePoses.Count;
+    //}
 
     public int FindNearestSampleOnArc(Vector3 _pos, ref Vector3 _offset)
     {
