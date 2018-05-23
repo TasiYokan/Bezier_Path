@@ -51,7 +51,7 @@ public class BezierCurve : MonoBehaviour
             Points = new List<BezierPoint>();
 
         Points.Add(_point);
-        UpdateAnchorTransform(Points.Count - 1);
+        UpdateAnchorTransformAt(Points.Count - 1);
 
         //Happens in Editor mode
         if (m_arcs == null)
@@ -89,14 +89,6 @@ public class BezierCurve : MonoBehaviour
             if (newArc != null)
                 m_arcs.Add(newArc);
         }
-
-        // TODO: Recalculate length, maybe not here
-        totalLength = 0;
-        foreach (BezierArc arc in m_arcs)
-        {
-            totalLength += arc.Length;
-        }
-        //print("Total length: " + totalLength);
     }
 
     public BezierArc InitArcsFromPointsAt(int _id)
@@ -132,7 +124,7 @@ public class BezierCurve : MonoBehaviour
     {
         for (int i = 0; i < Points.Count; ++i)
         {
-            UpdateAnchorTransform(i);
+            UpdateAnchorTransformAt(i);
         }
     }
 
@@ -140,7 +132,7 @@ public class BezierCurve : MonoBehaviour
     /// Using point's LocalPosition to initialize Position
     /// </summary>
     /// <param name="_id"></param>
-    public void UpdateAnchorTransform(int _id)
+    public void UpdateAnchorTransformAt(int _id)
     {
         SetAnchorLocalRotation(_id, Points[_id].LocalRotation);
         SetAnchorLocalPosition(_id, Points[_id].LocalPosition);
@@ -186,23 +178,17 @@ public class BezierCurve : MonoBehaviour
     /// </summary>
     public void ForceUpdateAllArcs()
     {
+        totalLength = 0;
         for (int i = 0; i < m_arcs.Count; ++i)
         {
             ForceUpdateOneArc(i);
+            totalLength += m_arcs[i].Length;
         }
     }
 
     public void ForceUpdateOneArc(int _arcId)
     {
         m_arcs[_arcId].UpdateLength();
-    }
-
-    public void UpdateAllPointPoses()
-    {
-        foreach (BezierPoint point in Points)
-        {
-            point.UpdatePosition();
-        }
     }
 
     void Awake()
@@ -220,7 +206,7 @@ public class BezierCurve : MonoBehaviour
     {
         if (drawDebugPath)
             DrawDebugCurve();
-        // To update sample poses
+        // To update arc length
         ForceUpdateAllArcs();
     }
 
