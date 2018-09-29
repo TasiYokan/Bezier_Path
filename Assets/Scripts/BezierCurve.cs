@@ -215,9 +215,10 @@ namespace TasiYokan.Curve
         private void DrawDebugCurve()
         {
             int sampleCountInArc = 20;
-            m_lineRenderer.positionCount = sampleCountInArc * m_arcs.Count;
+            int arcCount = m_arcs.Count;
+            m_lineRenderer.positionCount = sampleCountInArc * arcCount;
 
-            for (int i = 0; i < m_arcs.Count; ++i)
+            for (int i = 0; i < arcCount; ++i)
             {
                 for (int j = 0; j < sampleCountInArc; ++j)
                 {
@@ -241,15 +242,15 @@ namespace TasiYokan.Curve
                         {
                             var index = Points[i];
                             var indexNext = Points[i + 1];
-                            UnityEditor.Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
-                            indexNext.GetHandle(1).Position, Color.gray, null, 5);
+                            UnityEditor.Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(1).Position,
+                            indexNext.GetHandle(0).Position, Color.gray, null, 5);
                         }
                         else if (isAutoConnect)
                         {
                             var index = Points[i];
                             var indexNext = Points[0];
-                            UnityEditor.Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
-                            indexNext.GetHandle(1).Position, Color.gray, null, 5);
+                            UnityEditor.Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(1).Position,
+                            indexNext.GetHandle(0).Position, Color.gray, null, 5);
                         }
                     }
                 }

@@ -75,6 +75,8 @@ namespace TasiYokan.Curve
         public BezierPoint startPoint;
         public BezierPoint endPoint;
 
+        private const int startHandleId = 1;
+        private const int endHandleId = 1 - startHandleId;
         private float m_length;
 
         #endregion Fields
@@ -119,17 +121,17 @@ namespace TasiYokan.Curve
             float t2 = _t * _t;
             float u2 = u * u;
 
-            Vector3 p = 3 * u2 * (startPoint.GetHandle(0).Position - startPoint.Position)
-                + 6 * u * _t * (endPoint.GetHandle(1).Position - startPoint.GetHandle(0).Position)
-                + 3 * t2 * (endPoint.Position - endPoint.GetHandle(1).Position);
+            Vector3 p = 3 * u2 * (startPoint.GetHandle(startHandleId).Position - startPoint.Position)
+                + 6 * u * _t * (endPoint.GetHandle(endHandleId).Position - startPoint.GetHandle(startHandleId).Position)
+                + 3 * t2 * (endPoint.Position - endPoint.GetHandle(endHandleId).Position);
 
             return p;
         }
 
         public Vector3 CalculateD2(float _t)
         {
-            Vector3 p = 6 * (1 - _t) * (endPoint.GetHandle(1).Position - 2 * startPoint.GetHandle(0).Position + startPoint.Position)
-                + 6 * _t * (endPoint.Position - 2 * endPoint.GetHandle(1).Position + startPoint.GetHandle(0).Position);
+            Vector3 p = 6 * (1 - _t) * (endPoint.GetHandle(endHandleId).Position - 2 * startPoint.GetHandle(startHandleId).Position + startPoint.Position)
+                + 6 * _t * (endPoint.Position - 2 * endPoint.GetHandle(endHandleId).Position + startPoint.GetHandle(startHandleId).Position);
 
             return p;
         }
@@ -161,8 +163,8 @@ namespace TasiYokan.Curve
 
             Vector3 p = u3 * startPoint.Position
                 + t3 * endPoint.Position
-                + 3 * u2 * _t * startPoint.GetHandle(0).Position
-                + 3 * u * t2 * endPoint.GetHandle(1).Position;
+                + 3 * u2 * _t * startPoint.GetHandle(startHandleId).Position
+                + 3 * u * t2 * endPoint.GetHandle(endHandleId).Position;
 
             return p;
         }
@@ -177,9 +179,9 @@ namespace TasiYokan.Curve
         private float CalculateArcLength(float _a, float _b, int _n = 16)
         {
             float halfAMinusB = 0.5f * (_b - _a);
-            Vector3 P1minusP0 = startPoint.GetHandle(0).Position - startPoint.Position;
-            Vector3 P2minusP1 = endPoint.GetHandle(1).Position - startPoint.GetHandle(0).Position;
-            Vector3 P3minusP2 = endPoint.Position - endPoint.GetHandle(1).Position;
+            Vector3 P1minusP0 = startPoint.GetHandle(startHandleId).Position - startPoint.Position;
+            Vector3 P2minusP1 = endPoint.GetHandle(endHandleId).Position - startPoint.GetHandle(startHandleId).Position;
+            Vector3 P3minusP2 = endPoint.Position - endPoint.GetHandle(endHandleId).Position;
             float length = 0;
             for (int i = 0; i < Xni[_n].Count; ++i)
             {

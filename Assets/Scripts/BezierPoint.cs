@@ -46,8 +46,8 @@ namespace TasiYokan.Curve
             m_handles[1] = new BezierHandle();
 
             // TODO: Based on its rotation
-            SetHandleLocalPosition(0, Vector3.forward);
-            SetHandleLocalPosition(1, Vector3.back);
+            SetHandleLocalPosition(0, Vector3.back);
+            SetHandleLocalPosition(1, Vector3.forward);
         }
 
         #endregion Constructors

@@ -547,8 +547,8 @@ namespace TasiYokan.Curve
                     {
                         var index = Target.Points[i];
                         var indexNext = Target.Points[i + 1];
-                        Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
-                            indexNext.GetHandle(1).Position, ((Selection.activeGameObject == Target.gameObject) ? m_visualSetting.pathColor : m_visualSetting.inactivePathColor), null, 5);
+                        Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(1).Position,
+                            indexNext.GetHandle(0).Position, ((Selection.activeGameObject == Target.gameObject) ? m_visualSetting.pathColor : m_visualSetting.inactivePathColor), null, 5);
 
 
                     }
@@ -558,8 +558,8 @@ namespace TasiYokan.Curve
                         {
                             var index = Target.Points[i];
                             var indexNext = Target.Points[0];
-                            UnityEditor.Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(0).Position,
-                                indexNext.GetHandle(1).Position, ((Selection.activeGameObject == Target.gameObject) ? m_visualSetting.pathColor : m_visualSetting.inactivePathColor), null, 5);
+                            UnityEditor.Handles.DrawBezier(index.Position, indexNext.Position, index.GetHandle(1).Position,
+                                indexNext.GetHandle(0).Position, ((Selection.activeGameObject == Target.gameObject) ? m_visualSetting.pathColor : m_visualSetting.inactivePathColor), null, 5);
                         }
                     }
 
