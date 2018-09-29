@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface IDraggable
+namespace TasiYokan.Curve
 {
-    Vector3 DragOffset { get; set; }
-    void OnDragged(Vector3 _dragStartPos);
-    void OnDropped(Vector3 _dragEndPos);
-    void OnDragStay(Vector3 _dragCurPos);
+    public interface IDraggable
+    {
+        Vector3 DragOffset { get; set; }
+        void OnDragged(Vector3 _dragStartPos);
+        void OnDropped(Vector3 _dragEndPos);
+        void OnDragStay(Vector3 _dragCurPos);
+    }
 }

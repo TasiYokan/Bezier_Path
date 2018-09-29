@@ -2,36 +2,39 @@
 using System.Collections;
 using UnityEngine.Assertions;
 
-[System.Serializable]
-public class BezierHandle : IBezierPos
+namespace TasiYokan.Curve
 {
-    private Vector3 m_position;
-    [SerializeField]
-    private Vector3 m_localPosition;
-    
-    public Vector3 Position
+    [System.Serializable]
+    public class BezierHandle : IBezierPos
     {
-        get
+        private Vector3 m_position;
+        [SerializeField]
+        private Vector3 m_localPosition;
+
+        public Vector3 Position
         {
-            return m_position;
+            get
+            {
+                return m_position;
+            }
+
+            set
+            {
+                m_position = value;
+            }
         }
 
-        set
+        public Vector3 LocalPosition
         {
-            m_position = value;
-        }
-    }
+            get
+            {
+                return m_localPosition;
+            }
 
-    public Vector3 LocalPosition
-    {
-        get
-        {
-            return m_localPosition;
-        }
-
-        set
-        {
-            m_localPosition = value;
+            set
+            {
+                m_localPosition = value;
+            }
         }
     }
 }

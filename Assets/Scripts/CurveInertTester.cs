@@ -2,42 +2,45 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CurveInertTester : MonoBehaviour
+namespace TasiYokan.Curve
 {
-    public BezierCurve curve;
-    public int count = 10;
-    public List<GameObject> goes;
-
-    // Use this for initialization
-    void Start()
+    public class CurveInertTester : MonoBehaviour
     {
-        if (curve == null)
-            curve = FindObjectOfType<BezierCurve>();
+        public BezierCurve curve;
+        public int count = 10;
+        public List<GameObject> goes;
 
-        goes = new List<GameObject>();
-        for (int ai = 0; ai < curve.Arcs.Count; ++ai)
-            for (int i = 0; i < count; ++i)
-                goes.Add(GameObject.CreatePrimitive(PrimitiveType.Sphere));
-    }
+        // Use this for initialization
+        void Start()
+        {
+            if (curve == null)
+                curve = FindObjectOfType<BezierCurve>();
 
-    // Update is called once per frame
-    void OnDrawGizmos()
-    {
-        if (Application.isPlaying == false)
-            return;
+            goes = new List<GameObject>();
+            for (int ai = 0; ai < curve.Arcs.Count; ++ai)
+                for (int i = 0; i < count; ++i)
+                    goes.Add(GameObject.CreatePrimitive(PrimitiveType.Sphere));
+        }
 
-        int totalId = 0;
-        for (int ai = 0; ai < curve.Arcs.Count; ++ai)
-            for (int i = 0; i < count; ++i)
-            {
-                float mapped = curve.Arcs[ai].MapToUniform(i * 1f / count);
-                Vector3 pos = curve.Arcs[ai].CalculateCubicBezierPos(mapped);
-                goes[totalId].transform.position = pos;
-                Vector3 tangent = curve.Arcs[ai].CalculateCubicBezierVelocity(mapped) / 15;
-                Gizmos.color = Color.blue;
-                Gizmos.DrawLine(pos, pos + tangent);
+        // Update is called once per frame
+        void OnDrawGizmos()
+        {
+            if (Application.isPlaying == false)
+                return;
 
-                totalId++;
-            }
+            int totalId = 0;
+            for (int ai = 0; ai < curve.Arcs.Count; ++ai)
+                for (int i = 0; i < count; ++i)
+                {
+                    float mapped = curve.Arcs[ai].MapToUniform(i * 1f / count);
+                    Vector3 pos = curve.Arcs[ai].CalculateCubicBezierPos(mapped);
+                    goes[totalId].transform.position = pos;
+                    Vector3 tangent = curve.Arcs[ai].CalculateCubicBezierVelocity(mapped) / 15;
+                    Gizmos.color = Color.blue;
+                    Gizmos.DrawLine(pos, pos + tangent);
+
+                    totalId++;
+                }
+        }
     }
 }
