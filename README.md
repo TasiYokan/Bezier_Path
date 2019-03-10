@@ -7,5 +7,6 @@ For this unity project. You are allowed to move object within a bezier curve pat
 ![You can have object moving in dynamic speed with heading along curve.](https://imgur.com/anKGjap.gif)
 <center>You can have object moving in dynamic speed with heading along curve.</center>
 
-![gif](https://imgur.com/7PbyXRq.gif)
-<center>You can even change the path on the fly</center>
+---
+![You can even change the path on the fly](https://imgur.com/7PbyXRq.gif)
+<center> You can even change the path on the fly</center>
